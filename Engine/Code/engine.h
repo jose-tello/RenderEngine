@@ -14,6 +14,14 @@ typedef glm::ivec2 ivec2;
 typedef glm::ivec3 ivec3;
 typedef glm::ivec4 ivec4;
 
+const float vertices[] = {-1.0, -1.0, 0.0, 0.0, 0.0,
+                                      1.0, -1.0, 0.0, 1.0, 0.0,
+                                      1.0,  1.0, 0.0, 1.0, 1.0,
+                                     -1.0,  1.0, 0.0, 0.0, 1.0};
+
+const unsigned int indices[] = {0, 1, 2,
+                                0, 2, 3};
+
 struct Image
 {
     void* pixels;
@@ -42,8 +50,19 @@ enum Mode
     Mode_Count
 };
 
+struct OpenGLInfo
+{
+    std::string version;
+    std::string render;
+    std::string vendor;
+    std::string shadingLanguageVersion;
+    std::vector<std::string> extensions;
+};
+
 struct App
 {
+    OpenGLInfo info;
+
     // Loop
     f32  deltaTime;
     bool isRunning;
@@ -52,8 +71,6 @@ struct App
     Input input;
 
     // Graphics
-    char gpuName[64];
-    char openGlVersion[64];
 
     ivec2 displaySize;
 
@@ -85,11 +102,20 @@ struct App
     GLuint vao;
 };
 
+//Init-----------------------------------------------------------------
 void Init(App* app);
 
+void GetAppInfo(App* app);
+void InitResources(App* app);
+
+//GUI------------------------------------------------------------------
 void Gui(App* app);
 
+
+//Update---------------------------------------------------------------
 void Update(App* app);
 
+
+//Render----------------------------------------------------------------
 void Render(App* app);
 
