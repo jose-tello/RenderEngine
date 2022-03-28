@@ -115,7 +115,12 @@ void Gui(App* app);
 //Update---------------------------------------------------------------
 void Update(App* app);
 
+void CheckToUpdateShaders(App* app);
 
 //Render----------------------------------------------------------------
 void Render(App* app);
 
+
+
+//Error callback
+void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* useParam);

@@ -89,6 +89,7 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
 	return programHandle;
 }
 
+
 u32 LoadProgram(App* app, const char* filepath, const char* programName)
 {
 	String programSource = ReadTextFile(filepath);
@@ -102,6 +103,7 @@ u32 LoadProgram(App* app, const char* filepath, const char* programName)
 
 	return app->programs.size() - 1;
 }
+
 
 Image LoadImage(const char* filename)
 {
@@ -119,10 +121,12 @@ Image LoadImage(const char* filename)
 	return img;
 }
 
+
 void FreeImage(Image image)
 {
 	stbi_image_free(image.pixels);
 }
+
 
 GLuint CreateTexture2DFromImage(Image image)
 {
@@ -185,6 +189,11 @@ void Init(App* app)
 	GetAppInfo(app);
 
 	InitResources(app);
+
+	if (GLVersion.major > 4 ||  (GLVersion.major == 4 && GLVersion.minor >= 3))
+	{
+		glDebugMessageCallback(OnGlError, app);
+	}
 
 	app->mode = Mode_TexturedQuad;
 }
@@ -287,6 +296,28 @@ void Gui(App* app)
 void Update(App* app)
 {
 	// You can handle app->input keyboard/mouse here
+	CheckToUpdateShaders(app);
+}
+
+
+void CheckToUpdateShaders(App* app)
+{
+	int programCount = app->programs.size();
+
+	for (int i = 0; i < programCount; ++i)
+	{
+		std::string path = app->programs[i].filepath;
+		u64 currentTimeStamp = GetFileLastWriteTimestamp(path.c_str());
+
+		if (app->programs[i].lastWriteTimestamp != currentTimeStamp)
+		{
+			glDeleteProgram(app->programs[i].handle);
+
+			String source = ReadTextFile(app->programs[i].filepath.c_str());
+			app->programs[i].handle = CreateProgramFromSource(source, app->programs[i].programName.c_str());
+			app->programs[i].lastWriteTimestamp = currentTimeStamp;
+		}
+	}
 }
 
 
@@ -332,3 +363,43 @@ void Render(App* app)
 	}
 }
 
+
+void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* useParam)
+{
+	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+		return;
+
+	ELOG("OpenGL debug message: %s", message);
+
+	switch (source)
+	{
+	case GL_DEBUG_SOURCE_API:				ELOG(" - source: GL_DEBUG_SOURCE_API"); break;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:		ELOG(" - source: GL_DEBUG_SOURCE_WINDOW_SYSTEM"); break;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER:	ELOG(" - source: GL_DEBUG_SOURCE_SHADER_COMPILER"); break;
+	case GL_DEBUG_SOURCE_THIRD_PARTY:		ELOG(" - source: GL_DEBUG_SOURCE_THIRD_PARTY"); break;
+	case GL_DEBUG_SOURCE_APPLICATION:		ELOG(" - source: GL_DEBUG_SOURCE_APPLICATION");	break;
+	case GL_DEBUG_SOURCE_OTHER:				ELOG(" - source: GL_DEBUG_SOURCE_OTHER"); break;
+	}
+
+	switch (type)
+	{
+	case GL_DEBUG_TYPE_ERROR:				ELOG(" - type: GL_DEBUG_TYPE_ERROR"); break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: ELOG(" - type: GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR"); break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:	ELOG(" - type: GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR"); break;
+	case GL_DEBUG_TYPE_PORTABILITY:			ELOG(" - type: GL_DEBUG_TYPE_PORTABILITY"); break;
+	case GL_DEBUG_TYPE_PERFORMANCE:			ELOG(" - type: GL_DEBUG_TYPE_PERFORMANCE"); break;
+	case GL_DEBUG_TYPE_MARKER:				ELOG(" - type: GL_DEBUG_TYPE_MARKER"); break;
+	case GL_DEBUG_TYPE_PUSH_GROUP:			ELOG(" - type: GL_DEBUG_TYPE_PUSH_GROUP"); break;
+	case GL_DEBUG_TYPE_POP_GROUP:			ELOG(" - type: GL_DEBUG_TYPE_POP_GROUP"); break;
+	case GL_DEBUG_TYPE_OTHER:				ELOG(" - type: GL_DEBUG_TYPE_OTHER");  break;
+	}
+
+	switch (severity)
+	{
+	case GL_DEBUG_SEVERITY_HIGH:			ELOG(" - severity: GL_DEBUG_SEVERITY_HIGH"); break;
+	case GL_DEBUG_SEVERITY_MEDIUM:			ELOG(" - severity: GL_DEBUG_SEVERITY_MEDIUM"); break;
+	case GL_DEBUG_SEVERITY_LOW:				ELOG(" - severity: GL_DEBUG_SEVERITY_LOW"); break;
+	case GL_DEBUG_SEVERITY_NOTIFICATION:	ELOG(" - severity: GL_DEBUG_SEVERITY_NOTIFICATION"); break;
+	}
+
+}
