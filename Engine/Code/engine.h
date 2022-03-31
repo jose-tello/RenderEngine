@@ -5,14 +5,10 @@
 #pragma once
 
 #include "platform.h"
-#include <glad/glad.h>
 
-typedef glm::vec2  vec2;
-typedef glm::vec3  vec3;
-typedef glm::vec4  vec4;
-typedef glm::ivec2 ivec2;
-typedef glm::ivec3 ivec3;
-typedef glm::ivec4 ivec4;
+#include "ModelStructures.h"
+
+#include <glad/glad.h>
 
 const float vertices[] = {-1.0, -1.0, 0.0, 0.0, 0.0,
                            1.0, -1.0, 0.0, 1.0, 0.0,
@@ -25,7 +21,7 @@ const unsigned int indices[] = {0, 1, 2,
 struct Image
 {
     void* pixels;
-    ivec2 size;
+    glm::ivec2 size;
     i32   nchannels;
     i32   stride;
 };
@@ -72,9 +68,12 @@ struct App
 
     // Graphics
 
-    ivec2 displaySize;
+    glm::ivec2 displaySize;
 
     std::vector<Texture>  textures;
+    std::vector<Material> materials;
+    std::vector<Mesh> meshes;
+    std::vector <Model> models;
     std::vector<Program>  programs;
 
     // program indices

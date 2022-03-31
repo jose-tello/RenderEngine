@@ -6,6 +6,7 @@
 //
 
 #include "engine.h"
+
 #include <imgui.h>
 #include <stb_image.h>
 #include <stb_image_write.h>
@@ -309,7 +310,7 @@ void CheckToUpdateShaders(App* app)
 		std::string path = app->programs[i].filepath;
 		u64 currentTimeStamp = GetFileLastWriteTimestamp(path.c_str());
 
-		if (app->programs[i].lastWriteTimestamp != currentTimeStamp)
+		if (app->programs[i].lastWriteTimestamp < currentTimeStamp)
 		{
 			glDeleteProgram(app->programs[i].handle);
 
