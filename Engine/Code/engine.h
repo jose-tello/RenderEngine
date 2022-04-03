@@ -10,12 +10,12 @@
 
 #include <glad/glad.h>
 
-const float vertices[] = {-1.0, -1.0, 0.0, 0.0, 0.0,
+const float rectVertices[] = {-1.0, -1.0, 0.0, 0.0, 0.0,
                            1.0, -1.0, 0.0, 1.0, 0.0,
                            1.0,  1.0, 0.0, 1.0, 1.0,
                           -1.0,  1.0, 0.0, 0.0, 1.0};
 
-const unsigned int indices[] = {0, 1, 2,
+const unsigned int rectIndices[] = {0, 1, 2,
                                 0, 2, 3};
 
 struct Image
@@ -43,6 +43,7 @@ struct Program
 enum Mode
 {
     Mode_TexturedQuad,
+    Mode_Model,
     Mode_Count
 };
 
@@ -78,6 +79,7 @@ struct App
 
     // program indices
     u32 texturedGeometryProgramIdx;
+    u32 modelProgramIdx;
     
     // texture indices
     u32 diceTexIdx;
@@ -100,6 +102,9 @@ struct App
     // VAO object to link our screen filling quad with our textured quad shader
     GLuint vao;
 };
+
+GLuint CreateTexture2DFromImage(Image image);
+u32 LoadTexture2D(App* app, const char* filepath);
 
 //Init-----------------------------------------------------------------
 void Init(App* app);

@@ -219,17 +219,30 @@ void GetAppInfo(App* app)
 
 void InitResources(App* app)
 {
+	//Create screen rect
+	Model screenRect = {};
+	Mesh mesh = {};
+
+	VertexBufferLayout vertexLayout = {};
+	vertexLayout.stride = 5 * sizeof(float);
+	vertexLayout.attributes.push_back(VertexBufferAttribute(0, 3, 0));
+	vertexLayout.attributes.push_back(VertexBufferAttribute(1, 2, 3 * sizeof(float)));
+	
+	
+
+
+
 	// - vertex buffers
 	glGenBuffers(1, &app->embeddedVertices);
 	glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rectVertices), rectVertices, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// - element/index buffers
 	glGenBuffers(1, &app->embeddedElements);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rectIndices), rectIndices, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -359,6 +372,39 @@ void Render(App* app)
 		glUseProgram(0);
 	}
 	break;
+
+	case Mode_Model:
+	{
+		// - clear the framebuffer
+		glClearColor(0.1, 0.1, 0.1, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// - set the viewport
+		glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+		// - bind program
+		Program programTexGeo = app->programs[app->modelProgramIdx];
+		glUseProgram(programTexGeo.handle);
+		glBindVertexArray(app->vao);
+
+		// - set the blending state
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		// - bind the texture into unit 0
+		glUniform1i(app->programUniformTexture, 0);
+		glActiveTexture(GL_TEXTURE0);
+
+		unsigned int texHandle = app->textures[app->diceTexIdx].handle;
+		glBindTexture(GL_TEXTURE_2D, texHandle);
+
+		// - draw
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		glBindVertexArray(0);
+		glUseProgram(0);
+	}
+		break;
 
 	default:;
 	}

@@ -4,6 +4,8 @@
 
 struct VertexBufferAttribute
 {
+	VertexBufferAttribute(u8 location, u8 componentCount, u8 offset);
+
 	u8 location;
 	u8 componentCount;
 	u8 offset;
@@ -45,6 +47,8 @@ struct Model
 
 struct Submesh
 {
+	Submesh();
+
 	VertexBufferLayout vertexBufferLayout;
 	std::vector<float> vertices;
 	std::vector<u32> indices;
@@ -57,6 +61,7 @@ struct Submesh
 struct Mesh
 {
 	std::vector<Submesh> submeshes;
+
 	u32 vertexBufferHandle;
 	u32 indexBufferHandle;
 };
