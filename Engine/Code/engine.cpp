@@ -278,7 +278,7 @@ void InitResources(App* app)
 	vertexLayout.attributes.push_back(VertexBufferAttribute(1, 2, 3 * sizeof(float)));
 	
 	LoadModel(app, "Patrick/Patrick.obj");
-
+	//LoadModel(app, "Room/Room #1.obj");
 
 	// - vertex buffers
 	glGenBuffers(1, &app->embeddedVertices);
@@ -326,41 +326,58 @@ void InitResources(App* app)
 //GUI------------------------------------------------------------------------------------------
 void Gui(App* app)
 {
-	ImGui::Begin("Info");
-	ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
-
-	if (ImGui::BeginMenu("RenderMode"))
+	ImGui::Begin("Window");
+	
+	if (ImGui::CollapsingHeader("Info", ImGuiTreeNodeFlags_None))
 	{
-		if (ImGui::MenuItem("Textured quad"))
-			app->mode = Mode_TexturedQuad;
+		ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
 
-		if (ImGui::MenuItem("Model"))
-			app->mode = Mode_Model;
-
-		ImGui::EndMenu();
-	}
-
-	ImGui::Separator();
-	ImGui::Text("OpenGl version: %s", app->info.version.c_str());
-	ImGui::Text("GPU: %s", app->info.render.c_str());
-	ImGui::Text("Vendor: %s", app->info.vendor.c_str());
-	ImGui::Text("Shading language version: %s", app->info.shadingLanguageVersion.c_str());
-
-	int flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanFullWidth;
-
-	bool open = ImGui::TreeNodeEx("Extensions", flags);
-
-	if (open == true)
-	{
-		int extensionCount = app->info.extensions.size();
-		flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf;
-
-		for (int i = 0; i < extensionCount; ++i)
+		if (ImGui::BeginMenu("RenderMode"))
 		{
-			ImGui::TreeNodeEx(app->info.extensions[i].c_str(), flags);
+			if (ImGui::MenuItem("Textured quad"))
+				app->mode = Mode_TexturedQuad;
+
+			if (ImGui::MenuItem("Model"))
+				app->mode = Mode_Model;
+
+			ImGui::EndMenu();
+		}
+
+		ImGui::Separator();
+		ImGui::Text("OpenGl version: %s", app->info.version.c_str());
+		ImGui::Text("GPU: %s", app->info.render.c_str());
+		ImGui::Text("Vendor: %s", app->info.vendor.c_str());
+		ImGui::Text("Shading language version: %s", app->info.shadingLanguageVersion.c_str());
+
+		int flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanFullWidth;
+
+		bool open = ImGui::TreeNodeEx("Extensions", flags);
+
+		if (open == true)
+		{
+			int extensionCount = app->info.extensions.size();
+			flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf;
+
+			for (int i = 0; i < extensionCount; ++i)
+			{
+				ImGui::TreeNodeEx(app->info.extensions[i].c_str(), flags);
+				ImGui::TreePop();
+			}
 			ImGui::TreePop();
 		}
-		ImGui::TreePop();
+	}
+
+	ImGui::NewLine();
+	ImGui::Separator();
+	ImGui::NewLine();
+
+	if (ImGui::CollapsingHeader("Model list", ImGuiTreeNodeFlags_None))
+	{
+		int modelCount = app->models.size();
+		for (int i = 0; i < modelCount; ++i)
+		{
+			
+		}
 	}
 
 	ImGui::End();
@@ -462,7 +479,7 @@ u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 			}
 		}
 
-		assert(attribLinked, "Missed attribute link");
+		//assert(attribLinked, "Missed attribute link");
 	}
 
 	glBindVertexArray(0);
@@ -536,10 +553,13 @@ void RenderModels(App* app)
 			u32 materialIdx = model.materialIdx[j];
 			Material& material = app->materials[materialIdx];
 
-			glBindTexture(GL_TEXTURE_2D, app->textures[material.albedoTextureIdx].handle);
-			glUniform1i(app->geometryUniformTexture, 0);
-			glActiveTexture(GL_TEXTURE0);
-
+			if (material.albedoTextureIdx != UINT32_MAX)
+			{
+				glBindTexture(GL_TEXTURE_2D, app->textures[material.albedoTextureIdx].handle);
+				glUniform1i(app->geometryUniformTexture, 0);
+				glActiveTexture(GL_TEXTURE0);
+			}
+			
 			Submesh& submesh = mesh.submeshes[j];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 		}
