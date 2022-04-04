@@ -6,6 +6,7 @@
 //
 
 #include "engine.h"
+#include "assimp_model_loading.h"
 
 #include <imgui.h>
 #include <stb_image.h>
@@ -88,6 +89,54 @@ GLuint CreateProgramFromSource(String programSource, const char* shaderName)
 	glDeleteShader(fshader);
 
 	return programHandle;
+}
+
+
+u32 CreateProgram(App* app, const char* filepath, const char* programName)
+{
+	u32 ret = LoadProgram(app, filepath, programName);
+	Program& program = app->programs[ret];
+
+	int attributeCount;
+	glGetProgramiv(program.handle, GL_ACTIVE_ATTRIBUTES, &attributeCount);
+
+	for (int i = 0; i < attributeCount; ++i)
+	{
+		char* name = new char[1000];
+		int length;
+		int size;
+		GLenum type;
+
+		glGetActiveAttrib(program.handle, i, 1000, &length, &size, &type, name);
+		u8 attributeLocation = glGetAttribLocation(program.handle, name);
+
+		u8 attributeCount = 0;
+		switch (type)
+		{
+		case GL_FLOAT:
+			attributeCount = 1;
+			break;
+
+		case GL_FLOAT_VEC2:
+			attributeCount = 2;
+			break;
+
+		case GL_FLOAT_VEC3:
+			attributeCount = 3;
+			break;
+
+		case GL_FLOAT_VEC4:
+			attributeCount = 4;
+			break;
+		default:
+			break;
+		}
+
+		program.layout.attributes.push_back(VertexShaderAttribute(attributeLocation, attributeCount));
+		delete[] name;
+	}
+
+	return ret;
 }
 
 
@@ -196,7 +245,7 @@ void Init(App* app)
 		glDebugMessageCallback(OnGlError, app);
 	}
 
-	app->mode = Mode_TexturedQuad;
+	app->mode = Mode_Model;
 }
 
 
@@ -228,8 +277,7 @@ void InitResources(App* app)
 	vertexLayout.attributes.push_back(VertexBufferAttribute(0, 3, 0));
 	vertexLayout.attributes.push_back(VertexBufferAttribute(1, 2, 3 * sizeof(float)));
 	
-	
-
+	LoadModel(app, "Patrick/Patrick.obj");
 
 
 	// - vertex buffers
@@ -260,10 +308,12 @@ void InitResources(App* app)
 	glBindVertexArray(0);
 
 	// - programs (and retrieve uniform indices)
-	app->texturedGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
-	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-	app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
-	
+	//app->screenRectProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_RECT");
+	//app->rectUniformTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "uTexture");
+
+	app->texturedGeometryProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
+	app->geometryUniformTexture = glGetUniformLocation(app->programs[app->texturedGeometryProgramIdx].handle, "uTexture");
+
 	// - textures
 	app->diceTexIdx = LoadTexture2D(app, "dice.png");
 	app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
@@ -342,72 +392,150 @@ void Render(App* app)
 	{
 	case Mode_TexturedQuad:
 	{
-		// - clear the framebuffer
-		glClearColor(0.1, 0.1, 0.1, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// - set the viewport
-		glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-		// - bind program
-		Program programTexGeo = app->programs[app->texturedGeometryProgramIdx];
-		glUseProgram(programTexGeo.handle);
-		glBindVertexArray(app->vao);
-
-		// - set the blending state
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		// - bind the texture into unit 0
-		glUniform1i(app->programUniformTexture, 0);
-		glActiveTexture(GL_TEXTURE0);
-
-		unsigned int texHandle = app->textures[app->diceTexIdx].handle;
-		glBindTexture(GL_TEXTURE_2D, texHandle);
-
-		// - draw
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		glBindVertexArray(0);
-		glUseProgram(0);
+		RenderTexturedQuad(app);
 	}
 	break;
 
 	case Mode_Model:
 	{
-		// - clear the framebuffer
-		glClearColor(0.1, 0.1, 0.1, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// - set the viewport
-		glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-		// - bind program
-		Program programTexGeo = app->programs[app->modelProgramIdx];
-		glUseProgram(programTexGeo.handle);
-		glBindVertexArray(app->vao);
-
-		// - set the blending state
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		// - bind the texture into unit 0
-		glUniform1i(app->programUniformTexture, 0);
-		glActiveTexture(GL_TEXTURE0);
-
-		unsigned int texHandle = app->textures[app->diceTexIdx].handle;
-		glBindTexture(GL_TEXTURE_2D, texHandle);
-
-		// - draw
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		glBindVertexArray(0);
-		glUseProgram(0);
+		RenderModels(app);
 	}
-		break;
+	break;
 
 	default:;
 	}
+}
+
+
+u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
+{
+	Submesh& submesh = mesh.submeshes[submeshIndex];
+
+	int vaoCount = submesh.vaos.size();
+
+	for (int i = 0; i < vaoCount; ++i)
+	{
+		if (submesh.vaos[i].programHandle == program.handle)
+			return submesh.vaos[i].handle;
+	}
+
+	u32 vaoHandle = 0;
+
+	glGenVertexArrays(1, &vaoHandle);
+	glBindVertexArray(vaoHandle);
+
+	glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBufferHandle);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBufferHandle);
+
+	int vAttribCount = program.layout.attributes.size();
+
+	for (int i = 0; i < vAttribCount; ++i)
+	{
+		bool attribLinked = false;
+
+		int bAttribCount = submesh.vertexBufferLayout.attributes.size();
+		for (int j = 0; j < bAttribCount; ++j)
+		{
+			if (program.layout.attributes[i].location == submesh.vertexBufferLayout.attributes[j].location)
+			{
+				u32 index = submesh.vertexBufferLayout.attributes[j].location;
+				u32 nComp = submesh.vertexBufferLayout.attributes[j].componentCount;
+				u32 offset = submesh.vertexBufferLayout.attributes[j].offset + submesh.vertexOffset;
+				u32 stride = submesh.vertexBufferLayout.stride;
+
+				glVertexAttribPointer(index, nComp, GL_FLOAT, GL_FALSE, stride, (void*)(u64)offset);
+				glEnableVertexAttribArray(index);
+
+				attribLinked = true;
+				break;
+			}
+		}
+
+		assert(attribLinked, "Missed attribute link");
+	}
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	submesh.vaos.push_back(Vao(vaoHandle, program.handle));
+	return vaoHandle;
+}
+
+
+void RenderTexturedQuad(App* app)
+{
+	// - clear the framebuffer
+	glClearColor(0.1, 0.1, 0.1, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// - set the viewport
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+	// - bind program
+	Program programTexGeo = app->programs[app->screenRectProgramIdx];
+	glUseProgram(programTexGeo.handle);
+	glBindVertexArray(app->vao);
+
+	// - set the blending state
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// - bind the texture into unit 0
+	glUniform1i(app->rectUniformTexture, 0);
+	glActiveTexture(GL_TEXTURE0);
+
+	unsigned int texHandle = app->textures[app->diceTexIdx].handle;
+	glBindTexture(GL_TEXTURE_2D, texHandle);
+
+	// - draw
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+}
+
+
+void RenderModels(App* app)
+{
+	// - clear the framebuffer
+	glClearColor(0.1, 0.1, 0.1, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// - set the viewport
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+	// - bind program
+	Program programTexGeo = app->programs[app->texturedGeometryProgramIdx];
+	glUseProgram(programTexGeo.handle);
+	
+	int modelCount = app->models.size();
+	for (int i = 0; i < modelCount; ++i)
+	{
+		Model& model = app->models[i];
+		Mesh& mesh = app->meshes[model.meshIdx];
+
+		int submeshCount = mesh.submeshes.size();
+
+		for (int j = 0; j < submeshCount; ++j)
+		{
+			u32 vao = FindVAO(mesh, j, programTexGeo);
+			glBindVertexArray(vao);
+
+			u32 materialIdx = model.materialIdx[j];
+			Material& material = app->materials[materialIdx];
+
+			glBindTexture(GL_TEXTURE_2D, app->textures[material.albedoTextureIdx].handle);
+			glUniform1i(app->geometryUniformTexture, 0);
+			glActiveTexture(GL_TEXTURE0);
+
+			Submesh& submesh = mesh.submeshes[j];
+			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+		}
+	}
+
+	glBindVertexArray(0);
+	glUseProgram(0);
 }
 
 

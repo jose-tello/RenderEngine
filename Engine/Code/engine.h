@@ -38,6 +38,8 @@ struct Program
     std::string        filepath;
     std::string        programName;
     u64                lastWriteTimestamp; // What is this for?
+
+    VertexShaderLayout layout;
 };
 
 enum Mode
@@ -79,7 +81,7 @@ struct App
 
     // program indices
     u32 texturedGeometryProgramIdx;
-    u32 modelProgramIdx;
+    u32 screenRectProgramIdx;
     
     // texture indices
     u32 diceTexIdx;
@@ -97,11 +99,16 @@ struct App
     GLuint embeddedElements;
 
     // Location of the texture uniform in the textured quad shader
-    GLuint programUniformTexture;
+    GLuint rectUniformTexture;
+    GLuint geometryUniformTexture;
 
     // VAO object to link our screen filling quad with our textured quad shader
     GLuint vao;
 };
+
+u32 CreateProgram(App* app, const char* filepath, const char* programName);
+u32 LoadProgram(App* app, const char* filepath, const char* programName);
+
 
 GLuint CreateTexture2DFromImage(Image image);
 u32 LoadTexture2D(App* app, const char* filepath);
@@ -124,7 +131,10 @@ void CheckToUpdateShaders(App* app);
 //Render----------------------------------------------------------------
 void Render(App* app);
 
+u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
+void RenderTexturedQuad(App* app);
+void RenderModels(App* app);
 
 //Error callback
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* useParam);

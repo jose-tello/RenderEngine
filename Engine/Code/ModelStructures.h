@@ -21,6 +21,7 @@ struct VertexBufferLayout
 
 struct VertexShaderAttribute
 {
+	VertexShaderAttribute(u8 location, u8 componentCount);
 	u8 location;
 	u8 componentCount;
 };
@@ -34,6 +35,7 @@ struct VertexShaderLayout
 
 struct Vao
 {
+	Vao(u32 handle, u32 programHandle);
 	u32 handle;
 	u32 programHandle;
 };
