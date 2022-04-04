@@ -308,8 +308,8 @@ void InitResources(App* app)
 	glBindVertexArray(0);
 
 	// - programs (and retrieve uniform indices)
-	//app->screenRectProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_RECT");
-	//app->rectUniformTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "uTexture");
+	app->screenRectProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_RECT");
+	app->rectUniformTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "uTexture");
 
 	app->texturedGeometryProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
 	app->geometryUniformTexture = glGetUniformLocation(app->programs[app->texturedGeometryProgramIdx].handle, "uTexture");
@@ -328,6 +328,17 @@ void Gui(App* app)
 {
 	ImGui::Begin("Info");
 	ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
+
+	if (ImGui::BeginMenu("RenderMode"))
+	{
+		if (ImGui::MenuItem("Textured quad"))
+			app->mode = Mode_TexturedQuad;
+
+		if (ImGui::MenuItem("Model"))
+			app->mode = Mode_Model;
+
+		ImGui::EndMenu();
+	}
 
 	ImGui::Separator();
 	ImGui::Text("OpenGl version: %s", app->info.version.c_str());
