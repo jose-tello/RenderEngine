@@ -376,11 +376,71 @@ void Gui(App* app)
 		int modelCount = app->models.size();
 		for (int i = 0; i < modelCount; ++i)
 		{
-			
+			if (ImGui::Button(app->models[i].name.c_str()))
+			{
+				app->models[i].drawInspector = !app->models[i].drawInspector;
+			}
 		}
 	}
 
 	ImGui::End();
+
+	int modelCount = app->models.size();
+	for (int i = 0; i < modelCount; ++i)
+	{
+		if (app->models[i].drawInspector == true)
+		{
+			Model& model = app->models[i];
+			ImGui::Begin(model.name.c_str(), &model.drawInspector);
+
+			int materialCount = model.materialIdx.size();
+			for (int j = 0; j < materialCount; ++j)
+			{
+				Material& mat = app->materials[model.materialIdx[j]];
+				if (ImGui::CollapsingHeader(mat.name.c_str(), ImGuiTreeNodeFlags_None))
+				{
+					ImGui::PushID(j);
+					ImGui::Spacing();	ImGui::Spacing();
+
+					ImGui::InputFloat3("Albedo", &mat.albedo.x, "%.1f", ImGuiInputTextFlags_AutoSelectAll);
+					ImGui::Spacing();
+					ImGui::InputFloat3("Emissive", &mat.emissive.x, "%.1f", ImGuiInputTextFlags_AutoSelectAll);
+					ImGui::Spacing();
+					ImGui::DragFloat("Smoothness", &mat.smoothness, 0.01f, 0.0f, 100.0f);
+
+					ImVec2 textureSize = ImVec2(124, 124);
+
+					ImGui::Spacing();	ImGui::Separator();		ImGui::Spacing();
+
+					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Albedo texture");
+					ImGui::Image((ImTextureID)app->textures[mat.albedoTextureIdx].handle, textureSize);
+
+					ImGui::Spacing();	ImGui::Separator();		ImGui::Spacing();
+
+					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Emissive texture");
+					ImGui::Image((ImTextureID)app->textures[mat.emissiveTextureIdx].handle, textureSize);
+
+					ImGui::Spacing();	ImGui::Separator();		ImGui::Spacing();
+
+					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Specular texture");
+					ImGui::Image((ImTextureID)app->textures[mat.specularTextureIdx].handle, textureSize);
+
+					ImGui::Spacing();	ImGui::Separator();		ImGui::Spacing();
+
+					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Normals texture");
+					ImGui::Image((ImTextureID)app->textures[mat.normalsTextureIdx].handle, textureSize);
+
+					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Bump texture");
+					ImGui::Image((ImTextureID)app->textures[mat.bumpTextureIdx].handle, textureSize);
+
+					ImGui::Spacing();	ImGui::Spacing();
+					ImGui::PopID();
+				}
+			}
+
+			ImGui::End();
+		}
+	}
 }
 
 

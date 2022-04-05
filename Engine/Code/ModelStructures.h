@@ -44,7 +44,10 @@ struct Vao
 struct Model
 {
 	u32 meshIdx;
+	std::string name;
 	std::vector<u32> materialIdx;
+
+	bool drawInspector = false;
 };
 
 struct Submesh

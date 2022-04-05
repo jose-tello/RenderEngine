@@ -193,6 +193,7 @@ u32 LoadModel(App* app, const char* filename)
     app->models.push_back(Model{});
     Model& model = app->models.back();
     model.meshIdx = meshIdx;
+    model.name = filename;
     u32 modelIdx = (u32)app->models.size() - 1u;
 
     String directory = GetDirectoryPart(MakeString(filename));
