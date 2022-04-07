@@ -470,13 +470,17 @@ void DrawCameraGui(App* app)
 {
 	if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_None))
 	{
+		ImGui::NewLine();
+
 		ImGui::DragFloat3("Position", app->camera.GetPosition(), 0.05f);
 		ImGui::DragFloat3("Rotation", app->camera.GetRotation(), 0.05f);
 		ImGui::DragFloat3("Scale", app->camera.GetScale(), 0.05f);
 
+		ImGui::NewLine();
+
 		ImGui::DragFloat("FOV", app->camera.GetFOV(), 0.05f);
-		ImGui::DragFloat("Z Near", app->camera.GetZNear(), 0.1f);
-		ImGui::DragFloat("Z Far", app->camera.GetZFar(), 0.1f);
+		ImGui::DragFloat("Z Near", app->camera.GetZNear(), 0.001f, 0.f);
+		ImGui::DragFloat("Z Far", app->camera.GetZFar(), 0.6f);
 	}
 }
 
