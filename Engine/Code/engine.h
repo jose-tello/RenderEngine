@@ -7,6 +7,7 @@
 #include "platform.h"
 
 #include "ModelStructures.h"
+#include "Camera.h"
 
 #include <glad/glad.h>
 
@@ -61,6 +62,8 @@ struct OpenGLInfo
 struct App
 {
     OpenGLInfo info;
+
+    Camera camera;
 
     // Loop
     f32  deltaTime;
@@ -122,11 +125,16 @@ void InitResources(App* app);
 //GUI------------------------------------------------------------------
 void Gui(App* app);
 
+void DrawInfoGui(App* app);
+void DrawModelListGui(App* app);
+void DrawModelGui(App* app);
+void DrawCameraGui(App* app);
 
 //Update---------------------------------------------------------------
 void Update(App* app);
 
 void CheckToUpdateShaders(App* app);
+void UpdateCamera(App* app);
 
 //Render----------------------------------------------------------------
 void Render(App* app);

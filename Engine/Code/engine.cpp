@@ -328,6 +328,28 @@ void Gui(App* app)
 {
 	ImGui::Begin("Window");
 	
+	
+	DrawInfoGui(app);
+
+	ImGui::NewLine();
+	ImGui::Separator();
+	ImGui::NewLine();
+
+	DrawModelListGui(app);
+
+	ImGui::NewLine();
+	ImGui::Separator();
+	ImGui::NewLine();
+
+	DrawCameraGui(app);
+
+	ImGui::End();
+
+	DrawModelGui(app);
+}
+
+void DrawInfoGui(App* app)
+{
 	if (ImGui::CollapsingHeader("Info", ImGuiTreeNodeFlags_None))
 	{
 		ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
@@ -366,11 +388,10 @@ void Gui(App* app)
 			ImGui::TreePop();
 		}
 	}
+}
 
-	ImGui::NewLine();
-	ImGui::Separator();
-	ImGui::NewLine();
-
+void DrawModelListGui(App* app)
+{
 	if (ImGui::CollapsingHeader("Model list", ImGuiTreeNodeFlags_None))
 	{
 		int modelCount = app->models.size();
@@ -382,9 +403,10 @@ void Gui(App* app)
 			}
 		}
 	}
+}
 
-	ImGui::End();
-
+void DrawModelGui(App* app)
+{
 	int modelCount = app->models.size();
 	for (int i = 0; i < modelCount; ++i)
 	{
@@ -444,11 +466,28 @@ void Gui(App* app)
 }
 
 
+void DrawCameraGui(App* app)
+{
+	if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_None))
+	{
+		ImGui::DragFloat3("Position", app->camera.GetPosition(), 0.05f);
+		ImGui::DragFloat3("Rotation", app->camera.GetRotation(), 0.05f);
+		ImGui::DragFloat3("Scale", app->camera.GetScale(), 0.05f);
+
+		ImGui::DragFloat("FOV", app->camera.GetFOV(), 0.05f);
+		ImGui::DragFloat("Z Near", app->camera.GetZNear(), 0.1f);
+		ImGui::DragFloat("Z Far", app->camera.GetZFar(), 0.1f);
+	}
+}
+
+
 //Update----------------------------------------------------------------------------
 void Update(App* app)
 {
 	// You can handle app->input keyboard/mouse here
 	CheckToUpdateShaders(app);
+
+	UpdateCamera(app);
 }
 
 
@@ -473,6 +512,12 @@ void CheckToUpdateShaders(App* app)
 }
 
 
+void UpdateCamera(App* app)
+{
+	app->camera.SetAspectRatio(app->displaySize.x / app->displaySize.y);
+}
+
+
 //Render----------------------------------------------------------------------------
 void Render(App* app)
 {
@@ -490,7 +535,8 @@ void Render(App* app)
 	}
 	break;
 
-	default:;
+	default:
+		break;
 	}
 }
 
@@ -539,6 +585,7 @@ u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 			}
 		}
 
+		ELOG("Missed attribute link in mesh");
 		//assert(attribLinked, "Missed attribute link");
 	}
 

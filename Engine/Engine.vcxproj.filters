@@ -22,6 +22,9 @@
     <Filter Include="Engine\AssimpLoad">
       <UniqueIdentifier>{cad20ac2-0ecd-461b-a2c6-28f6037aef8b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Camera">
+      <UniqueIdentifier>{3eb9c686-3ae9-4fc0-9e47-ec53e18e48a2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ThirdParty\imgui-docking\imgui.cpp">
@@ -62,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="Code\assimp_model_loading.cpp">
       <Filter>Engine\AssimpLoad</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Camera.cpp">
+      <Filter>Engine\Camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +115,9 @@
     </ClInclude>
     <ClInclude Include="Code\assimp_model_loading.h">
       <Filter>Engine\AssimpLoad</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Camera.h">
+      <Filter>Engine\Camera</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
