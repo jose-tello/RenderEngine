@@ -11,6 +11,8 @@
 
 #include <glad/glad.h>
 
+#define MAX_GO_NAME_LENGTH 100
+
 const float rectVertices[] = {-1.0, -1.0, 0.0, 0.0, 0.0,
                            1.0, -1.0, 0.0, 1.0, 0.0,
                            1.0,  1.0, 0.0, 1.0, 1.0,
@@ -65,6 +67,8 @@ struct App
 
     Camera camera;
 
+    u32 entityIdCount = 0;
+
     // Loop
     f32  deltaTime;
     bool isRunning;
@@ -79,7 +83,8 @@ struct App
     std::vector<Texture>  textures;
     std::vector<Material> materials;
     std::vector<Mesh> meshes;
-    std::vector <Model> models;
+    std::vector<Model> models;
+    std::vector<Entity> entities;
     std::vector<Program>  programs;
 
     // program indices
@@ -127,7 +132,8 @@ void Gui(App* app);
 
 void DrawInfoGui(App* app);
 void DrawModelListGui(App* app);
-void DrawModelGui(App* app);
+void DrawEntityListGui(App* app);
+void DrawEntityGui(App* app);
 void DrawCameraGui(App* app);
 
 //Update---------------------------------------------------------------

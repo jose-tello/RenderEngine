@@ -196,6 +196,9 @@ u32 LoadModel(App* app, const char* filename)
     model.name = filename;
     u32 modelIdx = (u32)app->models.size() - 1u;
 
+    app->entityIdCount++;
+    app->entities.push_back(Entity(std::string(filename) + std::to_string(app->entityIdCount), modelIdx));
+
     String directory = GetDirectoryPart(MakeString(filename));
 
     // Create a list of materials

@@ -40,14 +40,29 @@ struct Vao
 	u32 programHandle;
 };
 
+struct Entity
+{
+	Entity(std::string name, u32 modelIdx);
+	glm::mat4 CalculateWorldTransform() const;
+
+	std::string name;
+
+	glm::vec3 position;
+	glm::vec3 rotation;
+	glm::vec3 scale;
+
+	u32 modelIdx;
+	u32 localParamsOffset;
+	u32 localParamsSize;
+
+	bool drawInspector = false;
+};
 
 struct Model
 {
 	u32 meshIdx;
 	std::string name;
 	std::vector<u32> materialIdx;
-
-	bool drawInspector = false;
 };
 
 struct Submesh

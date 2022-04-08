@@ -13,13 +13,10 @@ public:
 	~Camera();
 
 	float* GetPosition();
-	void SetPosition(glm::vec3& pos);
 
 	float* GetRotation();
-	void SetRotation(glm::vec3& rot);
 
 	float* GetScale();
-	void SetScale(glm::vec3& scl);
 
 	void SetAspectRatio(float ratio);
 

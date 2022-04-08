@@ -24,33 +24,15 @@ float* Camera::GetPosition()
 }
 
 
-void Camera::SetPosition(glm::vec3& pos)
-{
-	position = pos;
-}
-
-
 float* Camera::GetRotation()
 {
 	return &rotation.x;
 }
 
 
-void Camera::SetRotation(glm::vec3& rot)
-{
-	rotation = rot;
-}
-
-
 float* Camera::GetScale()
 {
 	return &scale.x;
-}
-
-
-void Camera::SetScale(glm::vec3& scl)
-{
-	scale = scl;
 }
 
 

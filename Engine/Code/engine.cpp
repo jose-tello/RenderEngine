@@ -341,11 +341,17 @@ void Gui(App* app)
 	ImGui::Separator();
 	ImGui::NewLine();
 
+	DrawEntityListGui(app);
+
+	ImGui::NewLine();
+	ImGui::Separator();
+	ImGui::NewLine();
+
 	DrawCameraGui(app);
 
 	ImGui::End();
 
-	DrawModelGui(app);
+	DrawEntityGui(app);
 }
 
 void DrawInfoGui(App* app)
@@ -399,21 +405,59 @@ void DrawModelListGui(App* app)
 		{
 			if (ImGui::Button(app->models[i].name.c_str()))
 			{
-				app->models[i].drawInspector = !app->models[i].drawInspector;
+				app->entityIdCount++;
+				app->entities.push_back(Entity(app->models[i].name + std::to_string(app->entityIdCount), i));
 			}
 		}
 	}
 }
 
-void DrawModelGui(App* app)
+
+void DrawEntityListGui(App* app)
 {
-	int modelCount = app->models.size();
-	for (int i = 0; i < modelCount; ++i)
+	if (ImGui::CollapsingHeader("Entity list", ImGuiTreeNodeFlags_None))
 	{
-		if (app->models[i].drawInspector == true)
+		int entityCount = app->entities.size();
+		for (int i = 0; i < entityCount; ++i)
 		{
-			Model& model = app->models[i];
-			ImGui::Begin(model.name.c_str(), &model.drawInspector);
+			ImGui::PushID(i);
+			if (ImGui::Button(app->entities[i].name.c_str()))
+			{
+				app->entities[i].drawInspector = !app->entities[i].drawInspector;
+			}
+			ImGui::PopID();
+		}
+	}
+}
+
+
+void DrawEntityGui(App* app)
+{
+	for (int i = 0; i < app->entities.size(); ++i)
+	{
+		bool deleteEnity = false;
+
+		if (app->entities[i].drawInspector == true)
+		{
+			Entity& entity = app->entities[i];
+			
+			ImGui::PushID(i);
+			ImGui::Begin(entity.name.c_str(), &entity.drawInspector);
+
+			ImGui::NewLine();
+
+			ImGui::DragFloat3("Position", &entity.position.x, 0.05f);
+			ImGui::DragFloat3("Rotation", &entity.rotation.x, 0.05f);
+			ImGui::DragFloat3("Scale", &entity.scale.x, 0.05f);
+
+			ImGui::NewLine();
+			
+			if (ImGui::Button("Delete entity"))
+				deleteEnity = true;
+
+			ImGui::NewLine();
+
+			Model& model = app->models[app->entities[i].modelIdx];
 
 			int materialCount = model.materialIdx.size();
 			for (int j = 0; j < materialCount; ++j)
@@ -461,6 +505,13 @@ void DrawModelGui(App* app)
 			}
 
 			ImGui::End();
+			ImGui::PopID();
+		}
+
+		if (deleteEnity == true)
+		{
+			app->entities.erase(app->entities.begin() + i);
+			i--;
 		}
 	}
 }
@@ -648,10 +699,10 @@ void RenderModels(App* app)
 	Program programTexGeo = app->programs[app->texturedGeometryProgramIdx];
 	glUseProgram(programTexGeo.handle);
 	
-	int modelCount = app->models.size();
-	for (int i = 0; i < modelCount; ++i)
+	int entityCount = app->entities.size();
+	for (int i = 0; i < entityCount; ++i)
 	{
-		Model& model = app->models[i];
+		Model& model = app->models[app->entities[i].modelIdx];
 		Mesh& mesh = app->meshes[model.meshIdx];
 
 		int submeshCount = mesh.submeshes.size();
