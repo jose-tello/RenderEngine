@@ -3,7 +3,6 @@
 Camera::Camera() :
 	position(0.f, 0.f, -5.f),
 	rotation(0.f, 0.f, 0.f),
-	scale(1.f, 1.f, 1.f),
 	aspectRatio(0.f),
 	FOV(DEFAULT_FOV),
 	zNear(DEFAULT_Z_NEAR),
@@ -27,12 +26,6 @@ float* Camera::GetPosition()
 float* Camera::GetRotation()
 {
 	return &rotation.x;
-}
-
-
-float* Camera::GetScale()
-{
-	return &scale.x;
 }
 
 

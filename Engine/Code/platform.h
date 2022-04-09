@@ -88,7 +88,7 @@ u64 GetFileLastWriteTimestamp(const char *filepath);
 void LogString(const char* str);
 
 
-u32 Align(u32 value, int alignment);
+u32 Align(u32 value, int alignment);    //TODO ask about this
 
 #define ILOG(...)                 \
 {                                 \
@@ -103,7 +103,7 @@ LogString(logBuffer);             \
 
 #define ASSERT(condition, message) assert((condition) && message)
 
-#define BINDING(b) b
+#define BINDING(b) b        //TODO ask about this
 
 #define KB(count) (1024*(count))
 #define MB(count) (1024*KB(count))

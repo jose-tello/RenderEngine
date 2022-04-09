@@ -16,8 +16,6 @@ public:
 
 	float* GetRotation();
 
-	float* GetScale();
-
 	void SetAspectRatio(float ratio);
 
 	float* GetFOV();
@@ -33,7 +31,6 @@ public:
 private:
 	glm::vec3 position;
 	glm::vec3 rotation;
-	glm::vec3 scale;
 
 	float aspectRatio;
 	float FOV;

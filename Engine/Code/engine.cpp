@@ -535,7 +535,6 @@ void DrawCameraGui(App* app)
 
 		ImGui::DragFloat3("Position", app->camera.GetPosition(), 0.05f);
 		ImGui::DragFloat3("Rotation", app->camera.GetRotation(), 0.05f);
-		ImGui::DragFloat3("Scale", app->camera.GetScale(), 0.05f);
 
 		ImGui::NewLine();
 
