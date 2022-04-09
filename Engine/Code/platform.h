@@ -87,6 +87,9 @@ u64 GetFileLastWriteTimestamp(const char *filepath);
  */
 void LogString(const char* str);
 
+
+u32 Align(u32 value, int alignment);
+
 #define ILOG(...)                 \
 {                                 \
 char logBuffer[1024] = {};        \
@@ -99,6 +102,8 @@ LogString(logBuffer);             \
 #define ARRAY_COUNT(array) (sizeof(array)/sizeof(array[0]))
 
 #define ASSERT(condition, message) assert((condition) && message)
+
+#define BINDING(b) b
 
 #define KB(count) (1024*(count))
 #define MB(count) (1024*KB(count))

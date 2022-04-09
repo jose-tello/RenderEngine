@@ -408,3 +408,10 @@ void LogString(const char* str)
 	fprintf(stderr, "%s\n", str);
 #endif
 }
+
+
+u32 Align(u32 value, int alignment)
+{
+	
+	return (value + alignment - 1) & ~(alignment - 1);
+}

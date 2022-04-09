@@ -46,16 +46,18 @@ void main()
 layout (location = 0) in vec3 aPosition;
 layout (location = 2) in vec2 aTexCoord;
 
+layout (binding = 1, std140) uniform LocalParams
+{
+	mat4 worldMatrix;
+	mat4 worldProjectionMatrix;
+};
+
 out vec2 texCoord;
 
 void main()
 {
 	texCoord = aTexCoord;
-
-	float clippingScale = 5.0;
-
-	gl_Position = vec4(aPosition, clippingScale);
-	gl_Position.z = -gl_Position.z;
+	gl_Position = worldProjectionMatrix * vec4(aPosition, 1.0);
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////

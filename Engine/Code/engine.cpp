@@ -320,6 +320,16 @@ void InitResources(App* app)
 	app->blackTexIdx = LoadTexture2D(app, "color_black.png");
 	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
+
+	//uniform buffer
+	int maxUniformBufferSize;
+	glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
+	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformAlignment);
+
+	glGenBuffers(1, &app->uniformBufferHandle);
+	glBindBuffer(GL_UNIFORM_BUFFER, app->uniformBufferHandle);
+	glBufferData(GL_UNIFORM_BUFFER, maxUniformBufferSize, NULL, GL_STREAM_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 
@@ -543,6 +553,8 @@ void Update(App* app)
 	CheckToUpdateShaders(app);
 
 	UpdateCamera(app);
+
+	FillUniformShader(app);
 }
 
 
@@ -570,6 +582,40 @@ void CheckToUpdateShaders(App* app)
 void UpdateCamera(App* app)
 {
 	app->camera.SetAspectRatio(app->displaySize.x / app->displaySize.y);
+}
+
+
+void FillUniformShader(App* app)
+{
+	glBindBuffer(GL_UNIFORM_BUFFER, app->uniformBufferHandle);
+	u8* bufferData = static_cast<u8*>(glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY));
+	u32 bufferHead = 0;
+
+	glm::mat4 projection = app->camera.GetProjectionMatrix();
+	glm::mat4 view = app->camera.GetViewMatrix();
+
+	int entityCount = app->entities.size();
+	for (int i = 0; i < entityCount; ++i)
+	{
+		bufferHead = Align(bufferHead, app->uniformAlignment);
+
+		app->entities[i].localParamsOffset = bufferHead;
+		
+		glm::mat4 worldTransform = app->entities[i].CalculateWorldTransform();
+
+		glm::mat4 worldViewProjection = projection * view * worldTransform;
+
+		memcpy(bufferData + bufferHead, glm::value_ptr(worldTransform), sizeof(glm::mat4));
+		bufferHead += sizeof(glm::mat4);
+
+		memcpy(bufferData + bufferHead, glm::value_ptr(worldViewProjection), sizeof(glm::mat4));
+		bufferHead += sizeof(glm::mat4);
+
+		app->entities[i].localParamsSize = bufferHead - app->entities[i].localParamsOffset;
+	}
+
+	glUnmapBuffer(GL_UNIFORM_BUFFER);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 
@@ -692,6 +738,10 @@ void RenderModels(App* app)
 	glClearColor(0.1, 0.1, 0.1, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	// - set the viewport
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
@@ -722,6 +772,10 @@ void RenderModels(App* app)
 				glActiveTexture(GL_TEXTURE0);
 			}
 			
+			u32 blockOffset = app->entities[i].localParamsOffset;
+			u32 blockSize = app->entities[i].localParamsSize;
+			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->uniformBufferHandle, blockOffset, blockSize);
+
 			Submesh& submesh = mesh.submeshes[j];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 		}

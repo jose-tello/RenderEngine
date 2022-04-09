@@ -79,6 +79,8 @@ struct App
     // Graphics
 
     glm::ivec2 displaySize;
+    u32 uniformBufferHandle;
+    int uniformAlignment;
 
     std::vector<Texture>  textures;
     std::vector<Material> materials;
@@ -141,6 +143,7 @@ void Update(App* app);
 
 void CheckToUpdateShaders(App* app);
 void UpdateCamera(App* app);
+void FillUniformShader(App* app);
 
 //Render----------------------------------------------------------------
 void Render(App* app);
