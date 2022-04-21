@@ -16,14 +16,14 @@
     <Filter Include="Stb">
       <UniqueIdentifier>{0ac2ff0f-5f18-480a-8bd6-6aa7428166bb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\ModelStructures">
-      <UniqueIdentifier>{97586c56-e7d2-4729-84e1-7346f499cde6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\AssimpLoad">
       <UniqueIdentifier>{cad20ac2-0ecd-461b-a2c6-28f6037aef8b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Engine\Camera">
       <UniqueIdentifier>{3eb9c686-3ae9-4fc0-9e47-ec53e18e48a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Structures">
+      <UniqueIdentifier>{97586c56-e7d2-4729-84e1-7346f499cde6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -61,13 +61,16 @@
       <Filter>Stb</Filter>
     </ClCompile>
     <ClCompile Include="Code\ModelStructures.cpp">
-      <Filter>Engine\ModelStructures</Filter>
+      <Filter>Engine\Structures</Filter>
     </ClCompile>
     <ClCompile Include="Code\assimp_model_loading.cpp">
       <Filter>Engine\AssimpLoad</Filter>
     </ClCompile>
     <ClCompile Include="Code\Camera.cpp">
       <Filter>Engine\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\BufferManagement.cpp">
+      <Filter>Engine\Structures</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -111,13 +114,16 @@
       <Filter>Stb</Filter>
     </ClInclude>
     <ClInclude Include="Code\ModelStructures.h">
-      <Filter>Engine\ModelStructures</Filter>
+      <Filter>Engine\Structures</Filter>
     </ClInclude>
     <ClInclude Include="Code\assimp_model_loading.h">
       <Filter>Engine\AssimpLoad</Filter>
     </ClInclude>
     <ClInclude Include="Code\Camera.h">
       <Filter>Engine\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\BufferManagement.h">
+      <Filter>Engine\Structures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

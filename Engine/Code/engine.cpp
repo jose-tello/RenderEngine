@@ -323,13 +323,11 @@ void InitResources(App* app)
 
 	//uniform buffer
 	int maxUniformBufferSize;
+	int uniformAlignment;
 	glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
-	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformAlignment);
+	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniformAlignment);
 
-	glGenBuffers(1, &app->uniformBufferHandle);
-	glBindBuffer(GL_UNIFORM_BUFFER, app->uniformBufferHandle);
-	glBufferData(GL_UNIFORM_BUFFER, maxUniformBufferSize, NULL, GL_STREAM_DRAW);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	app->cameraUniformBuffer = CreateBuffer(maxUniformBufferSize, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 }
 
 
@@ -586,9 +584,8 @@ void UpdateCamera(App* app)
 
 void FillUniformShader(App* app)
 {
-	glBindBuffer(GL_UNIFORM_BUFFER, app->uniformBufferHandle);
-	u8* bufferData = static_cast<u8*>(glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY));
-	u32 bufferHead = 0;
+	BindBuffer(app->cameraUniformBuffer);
+	MapBuffer(app->cameraUniformBuffer, GL_WRITE_ONLY);
 
 	glm::mat4 projection = app->camera.GetProjectionMatrix();
 	glm::mat4 view = app->camera.GetViewMatrix();
@@ -596,25 +593,19 @@ void FillUniformShader(App* app)
 	int entityCount = app->entities.size();
 	for (int i = 0; i < entityCount; ++i)
 	{
-		bufferHead = Align(bufferHead, app->uniformAlignment);
-
-		app->entities[i].localParamsOffset = bufferHead;
+		app->entities[i].localParamsOffset = app->cameraUniformBuffer.head;
 		
 		glm::mat4 worldTransform = app->entities[i].CalculateWorldTransform();
 
 		glm::mat4 worldViewProjection = projection * view * worldTransform;
 
-		memcpy(bufferData + bufferHead, glm::value_ptr(worldTransform), sizeof(glm::mat4));
-		bufferHead += sizeof(glm::mat4);
+		PushMat4(app->cameraUniformBuffer, worldTransform);
+		PushMat4(app->cameraUniformBuffer, worldViewProjection);
 
-		memcpy(bufferData + bufferHead, glm::value_ptr(worldViewProjection), sizeof(glm::mat4));
-		bufferHead += sizeof(glm::mat4);
-
-		app->entities[i].localParamsSize = bufferHead - app->entities[i].localParamsOffset;
+		app->entities[i].localParamsSize = app->cameraUniformBuffer.head - app->entities[i].localParamsOffset;
 	}
 
-	glUnmapBuffer(GL_UNIFORM_BUFFER);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	UnmapBuffer(app->cameraUniformBuffer);
 }
 
 
@@ -773,7 +764,7 @@ void RenderModels(App* app)
 			
 			u32 blockOffset = app->entities[i].localParamsOffset;
 			u32 blockSize = app->entities[i].localParamsSize;
-			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->uniformBufferHandle, blockOffset, blockSize);
+			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cameraUniformBuffer.handle, blockOffset, blockSize);
 
 			Submesh& submesh = mesh.submeshes[j];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);

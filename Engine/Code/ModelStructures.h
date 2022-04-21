@@ -40,6 +40,7 @@ struct Vao
 	u32 programHandle;
 };
 
+
 struct Entity
 {
 	Entity(std::string name, u32 modelIdx);

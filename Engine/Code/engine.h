@@ -8,6 +8,7 @@
 
 #include "ModelStructures.h"
 #include "Camera.h"
+#include "BufferManagement.h"
 
 #include <glad/glad.h>
 
@@ -79,8 +80,7 @@ struct App
     // Graphics
 
     glm::ivec2 displaySize;
-    u32 uniformBufferHandle;
-    int uniformAlignment;
+    Buffer cameraUniformBuffer;
 
     std::vector<Texture>  textures;
     std::vector<Material> materials;
