@@ -40,6 +40,7 @@
     <ClInclude Include="Code\BufferManagement.h" />
     <ClInclude Include="Code\Camera.h" />
     <ClInclude Include="Code\engine.h" />
+    <ClInclude Include="Code\Light.h" />
     <ClInclude Include="Code\ModelStructures.h" />
     <ClInclude Include="Code\platform.h" />
     <ClInclude Include="ThirdParty\glad\include\glad\glad.h" />

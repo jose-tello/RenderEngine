@@ -125,6 +125,9 @@
     <ClInclude Include="Code\BufferManagement.h">
       <Filter>Engine\Structures</Filter>
     </ClInclude>
+    <ClInclude Include="Code\Light.h">
+      <Filter>Engine\Structures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\shaders.glsl">
