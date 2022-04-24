@@ -6,16 +6,13 @@ bool IsPowerOf2(u32 value)
     return value && !(value & (value - 1));
 }
 
-u32 Align(u32 value, u32 alignment)
-{
-    return (value + alignment - 1) & ~(alignment - 1);
-}
 
-Buffer CreateBuffer(int size, u32 type, u32 usage)
+Buffer CreateBuffer(int size, int alignement, GLenum type, GLenum usage)
 {
     Buffer buffer = {};
     buffer.size = size;
     buffer.type = type;
+    buffer.alignement = alignement;
 
     glGenBuffers(1, &buffer.handle);
     glBindBuffer(type, buffer.handle);
@@ -31,7 +28,7 @@ void BindBuffer(const Buffer& buffer)
     glBindBuffer(buffer.type, buffer.handle);
 }
 
-void MapBuffer(Buffer& buffer, u32 access)
+void MapBuffer(Buffer& buffer, GLenum access)
 {
     glBindBuffer(buffer.type, buffer.handle);
     buffer.data = (u8*)glMapBuffer(buffer.type, access);

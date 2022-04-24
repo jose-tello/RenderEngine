@@ -5,8 +5,9 @@
 struct Buffer
 {
 	u32 handle;
-	u32 type;
-	int size;
+	GLenum type;
+	u32 size;
+	u32 alignement;
 	u32 head;
 	void* data;
 };
@@ -14,13 +15,11 @@ struct Buffer
 
 bool IsPowerOf2(u32 value);
 
-u32 Align(u32 value, u32 alignment);
-
-Buffer CreateBuffer(int size, u32 type, u32 usage);
+Buffer CreateBuffer(int size, int alignement, GLenum type, GLenum usage);
 
 void BindBuffer(const Buffer& buffer);
 
-void MapBuffer(Buffer& buffer, u32 access);
+void MapBuffer(Buffer& buffer, GLenum access);
 
 void UnmapBuffer(Buffer& buffer);
 
