@@ -357,6 +357,12 @@ void Gui(App* app)
 
 	DrawCameraGui(app);
 
+	ImGui::NewLine();
+	ImGui::Separator();
+	ImGui::NewLine();
+
+	DrawLightGui(app);
+
 	ImGui::End();
 
 	DrawEntityGui(app);
@@ -539,6 +545,61 @@ void DrawCameraGui(App* app)
 		ImGui::DragFloat("FOV", app->camera.GetFOV(), 0.05f);
 		ImGui::DragFloat("Z Near", app->camera.GetZNear(), 0.001f, 0.f);
 		ImGui::DragFloat("Z Far", app->camera.GetZFar(), 0.6f);
+	}
+}
+
+
+void DrawLightGui(App* app)
+{
+	if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_None))
+	{
+		ImGui::NewLine();
+
+		if (ImGui::Button("Create point light"))
+		{
+			app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.8, 0.8), glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0)));
+		}
+
+		ImGui::NewLine();
+
+		if (ImGui::Button("Create directional light"))
+		{
+			app->lights.push_back(Light(LIGHT_TYPE::DIRECTIONAL, glm::vec3(0.9, 0.8, 0.8), glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, 0.0)));
+		}
+
+		ImGui::NewLine();
+
+		char lightNameBuffer[100];
+
+		for (int i = 0; i < app->lights.size(); ++i)
+		{
+			sprintf_s(lightNameBuffer, 100, "Light %i", i);
+			ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), lightNameBuffer);
+			
+			switch (app->lights[i].type)
+			{
+			case LIGHT_TYPE::DIRECTIONAL:
+				break;
+
+			case LIGHT_TYPE::POINT:
+				break;
+			default:
+				break;
+			}
+
+			ImGui::PushID(i);
+
+			ImGui::DragFloat3("Position", glm::value_ptr(app->lights[i].position));
+			ImGui::DragFloat3("Direction", glm::value_ptr(app->lights[i].direction));
+
+			ImGui::ColorPicker3("Color", glm::value_ptr(app->lights[i].color));
+
+			ImGui::PopID();
+
+			ImGui::NewLine();
+			ImGui::Separator();
+			ImGui::NewLine();
+		}
 	}
 }
 

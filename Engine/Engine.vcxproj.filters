@@ -72,6 +72,9 @@
     <ClCompile Include="Code\BufferManagement.cpp">
       <Filter>Engine\Structures</Filter>
     </ClCompile>
+    <ClCompile Include="Code\Light.cpp">
+      <Filter>Engine\Structures</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">

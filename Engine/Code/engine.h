@@ -7,12 +7,15 @@
 #include "platform.h"
 
 #include "ModelStructures.h"
+#include "Light.h"
 #include "Camera.h"
 #include "BufferManagement.h"
 
 #include <glad/glad.h>
 
 #define MAX_GO_NAME_LENGTH 100
+
+struct Light;
 
 const float rectVertices[] = {-1.0, -1.0, 0.0, 0.0, 0.0,
                            1.0, -1.0, 0.0, 1.0, 0.0,
@@ -86,7 +89,10 @@ struct App
     std::vector<Material> materials;
     std::vector<Mesh> meshes;
     std::vector<Model> models;
+
     std::vector<Entity> entities;
+    std::vector<Light> lights;
+
     std::vector<Program>  programs;
 
     // program indices
@@ -137,6 +143,7 @@ void DrawModelListGui(App* app);
 void DrawEntityListGui(App* app);
 void DrawEntityGui(App* app);
 void DrawCameraGui(App* app);
+void DrawLightGui(App* app);
 
 //Update---------------------------------------------------------------
 void Update(App* app);
