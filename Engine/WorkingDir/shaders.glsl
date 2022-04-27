@@ -1,76 +1,123 @@
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-#ifdef TEXTURED_RECT
-
-#if defined(VERTEX) ///////////////////////////////////////////////////
-
-layout (location = 0) in vec3 aPosition;
-layout (location = 1) in vec2 aTexCoord;
-
-out vec2 texCoord;
-
-void main()
-{
-	texCoord = aTexCoord;
-
-	gl_Position = vec4(aPosition, 1.0);
-}
-
-#elif defined(FRAGMENT) ///////////////////////////////////////////////
-
-in vec2 texCoord;
-
-uniform sampler2D uTexture;
-
-layout (location = 0) out vec4 color;
-
-void main()
-{
-	color = texture(uTexture, texCoord);
-}
-
-#endif
-#endif
-
-
-// NOTE: You can write several shaders in the same file if you want as
-// long as you embrace them within an #ifdef block (as you can see above).
-// The third parameter of the LoadProgram function in engine.cpp allows
-// chosing the shader you want to load by name.
-
 #ifdef TEXTURED_GEOMETRY
 
 #if defined(VERTEX) ///////////////////////////////////////////////////
 
 layout (location = 0) in vec3 aPosition;
+layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoord;
+
+struct Light
+{
+	unsigned int type;
+	float maxDistance;
+	vec3 color;
+	vec3 direction;
+	vec3 position;
+};
+
+
+layout (binding = 0, std140) uniform GlobalParams
+{
+	vec3 uCameraPosition;
+	unsigned int uLightCount;
+
+	float uAmbientLightStrength;
+	vec3 uAmbientLightCol;
+
+	Light uLight[16];
+};
+
 
 layout (binding = 1, std140) uniform LocalParams
 {
-	mat4 worldMatrix;
-	mat4 worldProjectionMatrix;
+	mat4 uWorldMatrix;
+	mat4 uWorldProjectionMatrix;
 };
 
-out vec2 texCoord;
+out vec2 vTexCoord;
+out vec3 vPosition;
+out vec3 vNormal;
+out vec3 vViewDir;
 
 void main()
 {
-	texCoord = aTexCoord;
-	gl_Position = worldProjectionMatrix * vec4(aPosition, 1.0);
+	vTexCoord = aTexCoord;
+	vPosition = vec3(uWorldMatrix * vec4(aPosition, 1.0)).xyz;
+	vNormal = normalize(uWorldMatrix * vec4(aNormal, 0.0)).xyz;
+	vViewDir = normalize(uCameraPosition - vPosition);
+
+	gl_Position = uWorldProjectionMatrix * vec4(aPosition, 1.0);
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
-in vec2 texCoord;
+in vec2 vTexCoord;
+in vec3 vPosition;
+in vec3 vNormal;
+in vec3 vViewDir;
 
 uniform sampler2D uTexture;
 
 layout (location = 0) out vec4 color;
 
+struct Light 
+{
+	unsigned int type;
+	float maxDistance;
+	vec3 color;
+	vec3 direction;
+	vec3 position;
+};
+
+
+layout (binding = 0, std140) uniform GlobalParams
+{
+	vec3 uCameraPosition;
+	unsigned int uLightCount;
+
+	float uAmbientLightStrength;
+	vec3 uAmbientLightCol;
+
+	Light uLight[16];
+};
+
+vec3 CalculateAmbientLight()
+{
+	return uAmbientLightStrength * uAmbientLightCol;
+}
+
+
+vec3 CalculateDiffuse()
+{
+	vec3 col = vec3(0.0, 0.0, 0.0);
+
+	for(int i = 0; i < uLightCount; i++)
+	{
+		if (uLight[i].type == 0)
+		{
+			float diff = max(dot(vNormal, normalize(uLight[i].direction)), 0.0);
+			col += diff * uLight[i].color;
+		}
+
+
+		else
+		{
+			vec3 dir = normalize(uLight[i].position - vPosition);
+			float diff = max(dot(vNormal, dir), 0.0);
+			float atenuation = 1.0 - smoothstep(0.0, uLight[i].maxDistance, length(uLight[i].position - vPosition));
+			col += diff * uLight[i].color * atenuation;
+		}
+	}
+
+	return col;
+}
+
+
 void main()
 {
-	color = texture(uTexture, texCoord);
+	vec3 ambient = CalculateAmbientLight();
+	vec3 diffuse = CalculateDiffuse();
+	color = vec4((ambient + diffuse) * texture(uTexture, vTexCoord).xyz, 1.0);
 }
 
 #endif

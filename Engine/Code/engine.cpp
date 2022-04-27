@@ -327,7 +327,8 @@ void InitResources(App* app)
 	glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBufferSize);
 	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniformAlignment);
 
-	app->cameraUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
+	app->localUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
+	app->globalUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 }
 
 
@@ -569,28 +570,58 @@ void DrawLightGui(App* app)
 
 		ImGui::NewLine();
 
+		ImGui::InputFloat("Ambient light strength", &app->ambientLightStrength);
+		ImGui::NewLine();
+		ImGui::ColorPicker3("Ambient light color", glm::value_ptr(app->ambientLightColor));
+
+		ImGui::NewLine();
+
 		char lightNameBuffer[100];
 
 		for (int i = 0; i < app->lights.size(); ++i)
 		{
 			sprintf_s(lightNameBuffer, 100, "Light %i", i);
 			ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), lightNameBuffer);
+
+			ImGui::PushID(i);
+
+			if (ImGui::Button("Destroy Light"))
+			{
+				app->lights.erase(app->lights.begin() + i);
+				i--;
+				ImGui::PopID();
+				continue;
+			}
 			
 			switch (app->lights[i].type)
 			{
 			case LIGHT_TYPE::DIRECTIONAL:
+				ImGui::Text("Directional");
+
+				ImGui::Spacing();
+				ImGui::Spacing();
+
+				ImGui::DragFloat3("Direction", glm::value_ptr(app->lights[i].direction), 0.2f);
 				break;
 
 			case LIGHT_TYPE::POINT:
+				ImGui::Text("Point");
+
+				ImGui::Spacing();
+				ImGui::Spacing();
+
+				ImGui::DragFloat3("Position", glm::value_ptr(app->lights[i].position), 0.2f);
+				ImGui::DragFloat("Max distance", &app->lights[i].maxDistance, 0.05f);
+
+				if (app->lights[i].maxDistance < 0.0)
+					app->lights[i].maxDistance = 0.0;
+
 				break;
+
 			default:
+				ELOG("Need to add light type to ui switch");
 				break;
 			}
-
-			ImGui::PushID(i);
-
-			ImGui::DragFloat3("Position", glm::value_ptr(app->lights[i].position));
-			ImGui::DragFloat3("Direction", glm::value_ptr(app->lights[i].direction));
 
 			ImGui::ColorPicker3("Color", glm::value_ptr(app->lights[i].color));
 
@@ -612,7 +643,8 @@ void Update(App* app)
 
 	UpdateCamera(app);
 
-	FillUniformShader(app);
+	FillUniformGlobalParams(app);
+	FillUniformLocalParams(app);
 }
 
 
@@ -639,14 +671,17 @@ void CheckToUpdateShaders(App* app)
 
 void UpdateCamera(App* app)
 {
-	app->camera.SetAspectRatio(app->displaySize.x / app->displaySize.y);
+	if (app->displaySize.x != 0 && app->displaySize.y != 0)
+	{
+		app->camera.SetAspectRatio(app->displaySize.x / app->displaySize.y);
+	}
 }
 
 
-void FillUniformShader(App* app)
+void FillUniformLocalParams(App* app)
 {
-	BindBuffer(app->cameraUniformBuffer);
-	MapBuffer(app->cameraUniformBuffer, GL_WRITE_ONLY);
+	BindBuffer(app->localUniformBuffer);
+	MapBuffer(app->localUniformBuffer, GL_WRITE_ONLY);
 
 	glm::mat4 projection = app->camera.GetProjectionMatrix();
 	glm::mat4 view = app->camera.GetViewMatrix();
@@ -654,20 +689,51 @@ void FillUniformShader(App* app)
 	int entityCount = app->entities.size();
 	for (int i = 0; i < entityCount; ++i)
 	{
-		AlignHead(app->cameraUniformBuffer, app->cameraUniformBuffer.alignement);
+		AlignHead(app->localUniformBuffer, app->localUniformBuffer.alignement);
 
-		app->entities[i].localParamsOffset = app->cameraUniformBuffer.head;
+		app->entities[i].localParamsOffset = app->localUniformBuffer.head;
 		
 		glm::mat4 worldTransform = app->entities[i].CalculateWorldTransform();
-		PushMat4(app->cameraUniformBuffer, worldTransform);
+		PushMat4(app->localUniformBuffer, worldTransform);
 
 		glm::mat4 worldViewProjection = projection * view * worldTransform;
-		PushMat4(app->cameraUniformBuffer, worldViewProjection);
+		PushMat4(app->localUniformBuffer, worldViewProjection);
 
-		app->entities[i].localParamsSize = app->cameraUniformBuffer.head - app->entities[i].localParamsOffset;
+		app->entities[i].localParamsSize = app->localUniformBuffer.head - app->entities[i].localParamsOffset;
 	}
 
-	UnmapBuffer(app->cameraUniformBuffer);
+	UnmapBuffer(app->localUniformBuffer);
+}
+
+
+void FillUniformGlobalParams(App* app)
+{
+	BindBuffer(app->globalUniformBuffer);
+	MapBuffer(app->globalUniformBuffer, GL_WRITE_ONLY);
+	
+	app->globalParamsOffset = app->globalUniformBuffer.head;
+
+	PushVec3(app->globalUniformBuffer, app->camera.GetPositionV3());
+	PushUInt(app->globalUniformBuffer, app->lights.size());
+
+	PushFloat(app->globalUniformBuffer,app->ambientLightStrength);
+	PushVec3(app->globalUniformBuffer, app->ambientLightColor);
+
+	int lightCount = app->lights.size();
+	for (int i = 0; i < lightCount; ++i)
+	{
+		AlignHead(app->globalUniformBuffer, sizeof(glm::vec4));
+
+		PushUInt(app->globalUniformBuffer, (u32)app->lights[i].type);
+		PushFloat(app->globalUniformBuffer, app->lights[i].maxDistance);
+		PushVec3(app->globalUniformBuffer, app->lights[i].color);
+		PushVec3(app->globalUniformBuffer, app->lights[i].direction);
+		PushVec3(app->globalUniformBuffer, app->lights[i].position);
+	}
+
+	app->globalParamsSize = app->globalUniformBuffer.head - app->globalParamsOffset;
+
+	UnmapBuffer(app->globalUniformBuffer);
 }
 
 
@@ -800,7 +866,9 @@ void RenderModels(App* app)
 	// - bind program
 	Program programTexGeo = app->programs[app->texturedGeometryProgramIdx];
 	glUseProgram(programTexGeo.handle);
-	
+
+	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->globalUniformBuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+
 	int entityCount = app->entities.size();
 	for (int i = 0; i < entityCount; ++i)
 	{
@@ -824,9 +892,7 @@ void RenderModels(App* app)
 				glActiveTexture(GL_TEXTURE0);
 			}
 			
-			u32 blockOffset = app->entities[i].localParamsOffset;
-			u32 blockSize = app->entities[i].localParamsSize + app->entities[i].localParamsOffset;
-			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->cameraUniformBuffer.handle, blockOffset, blockSize);
+			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->localUniformBuffer.handle, app->entities[i].localParamsOffset, app->entities[i].localParamsSize);
 
 			Submesh& submesh = mesh.submeshes[j];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);

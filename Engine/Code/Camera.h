@@ -13,6 +13,7 @@ public:
 	~Camera();
 
 	float* GetPosition();
+	glm::vec3 GetPositionV3() const;
 
 	float* GetRotation();
 

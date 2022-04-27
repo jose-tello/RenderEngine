@@ -83,7 +83,11 @@ struct App
     // Graphics
 
     glm::ivec2 displaySize;
-    Buffer cameraUniformBuffer;
+    Buffer localUniformBuffer;
+    Buffer globalUniformBuffer;
+
+    int globalParamsOffset = -1;
+    int globalParamsSize = -1;
 
     std::vector<Texture>  textures;
     std::vector<Material> materials;
@@ -94,6 +98,10 @@ struct App
     std::vector<Light> lights;
 
     std::vector<Program>  programs;
+
+    //Ambient light
+    float ambientLightStrength = 0.05;
+    glm::vec3 ambientLightColor = {0.95, 0.8, 0.8};
 
     // program indices
     u32 texturedGeometryProgramIdx;
@@ -150,7 +158,8 @@ void Update(App* app);
 
 void CheckToUpdateShaders(App* app);
 void UpdateCamera(App* app);
-void FillUniformShader(App* app);
+void FillUniformLocalParams(App* app);
+void FillUniformGlobalParams(App* app);
 
 //Render----------------------------------------------------------------
 void Render(App* app);

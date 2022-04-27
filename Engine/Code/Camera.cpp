@@ -1,7 +1,7 @@
 #include "Camera.h"
 
 Camera::Camera() :
-	position(0.f, 0.f, -5.f),
+	position(0.f, 0.f, 10.f),
 	rotation(0.f, 0.f, 0.f),
 	aspectRatio(0.f),
 	FOV(DEFAULT_FOV),
@@ -20,6 +20,12 @@ Camera::~Camera()
 float* Camera::GetPosition()
 {
 	return &position.x;
+}
+
+
+glm::vec3 Camera::GetPositionV3() const
+{
+	return position;
 }
 
 
