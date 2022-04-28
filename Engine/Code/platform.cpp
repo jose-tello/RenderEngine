@@ -106,6 +106,7 @@ void OnGlfwResizeFramebuffer(GLFWwindow* window, int width, int height)
 {
 	App* app = (App*)glfwGetWindowUserPointer(window);
 	app->displaySize = glm::vec2(width, height);
+	app->framebuffer.Regenerate(width, height);
 }
 
 void OnGlfwCloseWindow(GLFWwindow* window)

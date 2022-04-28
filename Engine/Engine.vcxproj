@@ -23,6 +23,7 @@
     <ClCompile Include="Code\BufferManagement.cpp" />
     <ClCompile Include="Code\Camera.cpp" />
     <ClCompile Include="Code\engine.cpp" />
+    <ClCompile Include="Code\FrameBuffer.cpp" />
     <ClCompile Include="Code\Light.cpp" />
     <ClCompile Include="Code\ModelStructures.cpp" />
     <ClCompile Include="Code\platform.cpp" />
@@ -41,6 +42,7 @@
     <ClInclude Include="Code\BufferManagement.h" />
     <ClInclude Include="Code\Camera.h" />
     <ClInclude Include="Code\engine.h" />
+    <ClInclude Include="Code\FrameBuffer.h" />
     <ClInclude Include="Code\Light.h" />
     <ClInclude Include="Code\ModelStructures.h" />
     <ClInclude Include="Code\platform.h" />

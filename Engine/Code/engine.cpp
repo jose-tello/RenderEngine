@@ -275,7 +275,7 @@ void InitResources(App* app)
 	VertexBufferLayout vertexLayout = {};
 	vertexLayout.stride = 5 * sizeof(float);
 	vertexLayout.attributes.push_back(VertexBufferAttribute(0, 3, 0));
-	vertexLayout.attributes.push_back(VertexBufferAttribute(1, 2, 3 * sizeof(float)));
+	vertexLayout.attributes.push_back(VertexBufferAttribute(2, 2, 3 * sizeof(float)));
 	
 	LoadModel(app, "Patrick/Patrick.obj");
 	//LoadModel(app, "Room/Room #1.obj");
@@ -329,6 +329,8 @@ void InitResources(App* app)
 
 	app->localUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 	app->globalUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
+
+	app->framebuffer.Regenerate(app->displaySize.x, app->displaySize.y);
 }
 
 
@@ -853,6 +855,8 @@ void RenderTexturedQuad(App* app)
 void RenderModels(App* app)
 {
 	// - clear the framebuffer
+	//glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
+
 	glClearColor(0.1, 0.1, 0.1, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

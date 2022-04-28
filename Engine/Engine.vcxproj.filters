@@ -75,6 +75,9 @@
     <ClCompile Include="Code\Light.cpp">
       <Filter>Engine\Structures</Filter>
     </ClCompile>
+    <ClCompile Include="Code\FrameBuffer.cpp">
+      <Filter>Engine\Structures</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -129,6 +132,9 @@
       <Filter>Engine\Structures</Filter>
     </ClInclude>
     <ClInclude Include="Code\Light.h">
+      <Filter>Engine\Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\FrameBuffer.h">
       <Filter>Engine\Structures</Filter>
     </ClInclude>
   </ItemGroup>

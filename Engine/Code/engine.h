@@ -10,6 +10,7 @@
 #include "Light.h"
 #include "Camera.h"
 #include "BufferManagement.h"
+#include "FrameBuffer.h"
 
 #include <glad/glad.h>
 
@@ -128,6 +129,8 @@ struct App
 
     // VAO object to link our screen filling quad with our textured quad shader
     GLuint vao;
+
+    FrameBuffer framebuffer;
 };
 
 u32 CreateProgram(App* app, const char* filepath, const char* programName);
