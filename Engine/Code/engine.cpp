@@ -308,7 +308,7 @@ void InitResources(App* app)
 	glBindVertexArray(0);
 
 	// - programs (and retrieve uniform indices)
-	app->screenRectProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_RECT");
+	app->screenRectProgramIdx = CreateProgram(app, "texturedQuad.glsl", "TEXTURED_QUAD");
 	app->rectUniformTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "uTexture");
 
 	app->texturedGeometryProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
@@ -855,7 +855,10 @@ void RenderTexturedQuad(App* app)
 void RenderModels(App* app)
 {
 	// - clear the framebuffer
-	//glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
+	glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
+
+	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 
 	glClearColor(0.1, 0.1, 0.1, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -902,6 +905,35 @@ void RenderModels(App* app)
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 		}
 	}
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glClearColor(0.1, 0.1, 0.1, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// - set the viewport
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+	// - bind program
+	programTexGeo = app->programs[app->screenRectProgramIdx];
+	glUseProgram(programTexGeo.handle);
+	glBindVertexArray(app->vao);
+
+	// - set the blending state
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// - bind the texture into unit 0
+	glUniform1i(app->rectUniformTexture, 0);
+	glActiveTexture(GL_TEXTURE0);
+
+	unsigned int texHandle = app->framebuffer.normalsTex;
+	glBindTexture(GL_TEXTURE_2D, texHandle);
+
+	// - draw
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	glBindVertexArray(0);
 	glUseProgram(0);

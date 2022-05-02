@@ -59,6 +59,8 @@ in vec3 vViewDir;
 uniform sampler2D uTexture;
 
 layout (location = 0) out vec4 color;
+layout (location = 1) out vec4 normals;
+layout (location = 2) out vec4 worldPos;
 
 struct Light 
 {
@@ -115,9 +117,12 @@ vec3 CalculateDiffuse()
 
 void main()
 {
-	vec3 ambient = CalculateAmbientLight();
-	vec3 diffuse = CalculateDiffuse();
-	color = vec4((ambient + diffuse) * texture(uTexture, vTexCoord).xyz, 1.0);
+	//vec3 ambient = CalculateAmbientLight();
+	//vec3 diffuse = CalculateDiffuse();
+	//color = vec4((ambient + diffuse) * texture(uTexture, vTexCoord).xyz, 1.0);
+	color = texture(uTexture, vTexCoord);
+	normals = vec4(normalize(vNormal), 1.0);
+	worldPos = vec4(vPosition, 1.0);
 }
 
 #endif

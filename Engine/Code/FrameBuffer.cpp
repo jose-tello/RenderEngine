@@ -20,6 +20,12 @@ FrameBuffer::~FrameBuffer()
 
 void FrameBuffer::Regenerate(float displaySizeX, float displaySizeY)
 {
+	glDeleteTextures(1, &albedoTex);
+	glDeleteTextures(1, &normalsTex);
+	glDeleteTextures(1, &worldPosTex);
+	glDeleteTextures(1, &depthTex);
+	glDeleteFramebuffers(1, &handle);
+
 	//Albedo
 	glGenTextures(1, &albedoTex);
 	glBindTexture(GL_TEXTURE_2D, albedoTex);
