@@ -40,7 +40,7 @@ void FrameBuffer::Regenerate(float displaySizeX, float displaySizeY)
 	//Normals
 	glGenTextures(1, &normalsTex);
 	glBindTexture(GL_TEXTURE_2D, normalsTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, displaySizeX, displaySizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, displaySizeX, displaySizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);	
@@ -52,7 +52,7 @@ void FrameBuffer::Regenerate(float displaySizeX, float displaySizeY)
 	//World Pos
 	glGenTextures(1, &worldPosTex);
 	glBindTexture(GL_TEXTURE_2D, worldPosTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, displaySizeX, displaySizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, displaySizeX, displaySizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);

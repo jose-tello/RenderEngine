@@ -18,13 +18,96 @@ void main()
 
 in vec2 vTexCoord;
 
-uniform sampler2D uTexture;
+uniform int drawMode;
+
+uniform sampler2D albedo;
+uniform sampler2D normals;
+uniform sampler2D worldPos;
+uniform sampler2D depth;
+
+struct Light
+{
+	unsigned int type;
+	float maxDistance;
+	vec3 color;
+	vec3 direction;
+	vec3 position;
+};
+
+layout (binding = 0, std140) uniform GlobalParams
+{
+	vec3 uCameraPosition;
+	unsigned int uLightCount;
+
+	float uAmbientLightStrength;
+	vec3 uAmbientLightCol;
+
+	Light uLight[16];
+};
+
 
 layout (location = 0) out vec4 color;
 
+vec3 CalculateAmbientLight()
+{
+	return uAmbientLightStrength * uAmbientLightCol;
+}
+
+
+vec3 CalculateDiffuse()
+{
+	vec3 col = vec3(0.0, 0.0, 0.0);
+
+	for(int i = 0; i < uLightCount; i++)
+	{
+		vec4 normal = texture(normals, vTexCoord);
+		if (uLight[i].type == 0)
+		{
+			
+			float diff = max(dot(normal.xyz, normalize(uLight[i].direction)), 0.0);
+			col += diff * uLight[i].color;
+		}
+
+
+		else
+		{
+			vec4 pos = texture(worldPos, vTexCoord);
+			vec3 dir = normalize(uLight[i].position - pos.xyz);
+			float diff = max(dot(normal.xyz, dir), 0.0);
+			float atenuation = 1.0 - smoothstep(0.0, uLight[i].maxDistance, length(uLight[i].position - pos.xyz));
+			col += diff * uLight[i].color * atenuation;
+		}
+	}
+
+	return col;
+}
+
+
 void main()
 {
-	color = texture(uTexture, vTexCoord);
+	if (drawMode == 0)
+	{
+		vec3 ambient = CalculateAmbientLight();
+		vec3 diffuse = CalculateDiffuse();
+
+		color = vec4((ambient + diffuse) * texture(albedo, vTexCoord).xyz, 1.0);
+	}
+
+	else if (drawMode == 1)
+		color = texture(albedo, vTexCoord);
+
+	else if (drawMode == 2)
+		color = texture(normals, vTexCoord);
+
+	else if (drawMode == 3)
+		color = texture(worldPos, vTexCoord);
+
+	else if (drawMode == 4)
+	{
+		float depthValue = texture(depth, vTexCoord).x;
+		color = vec4(depthValue, depthValue, depthValue, 1.0);
+	}
+		
 }
 
 #endif

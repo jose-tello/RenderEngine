@@ -26,6 +26,16 @@ const float rectVertices[] = {-1.0, -1.0, 0.0, 0.0, 0.0,
 const unsigned int rectIndices[] = {0, 1, 2,
                                 0, 2, 3};
 
+enum class DRAW_MODE : int
+{
+    DEFAULT = 0,
+    ALBEDO,
+    NORMALS,
+    WORLD_POS,
+    DEPTH,
+    MAX
+};
+
 struct Image
 {
     void* pixels;
@@ -69,6 +79,9 @@ struct OpenGLInfo
 struct App
 {
     OpenGLInfo info;
+    DRAW_MODE drawMode = DRAW_MODE::DEFAULT;
+
+
 
     Camera camera;
 
@@ -123,8 +136,13 @@ struct App
     GLuint embeddedVertices;
     GLuint embeddedElements;
 
-    // Location of the texture uniform in the textured quad shader
-    GLuint rectUniformTexture;
+    // Location of texture uniforms
+    GLuint albedoTexture;
+    GLuint normalsTexture;
+    GLuint worldPositionTexture;
+    GLuint depthTexture;
+    GLuint drawModeUniform;
+
     GLuint geometryUniformTexture;
 
     // VAO object to link our screen filling quad with our textured quad shader
@@ -149,6 +167,7 @@ void InitResources(App* app);
 //GUI------------------------------------------------------------------
 void Gui(App* app);
 
+void DrawModeGui(App* app);
 void DrawInfoGui(App* app);
 void DrawModelListGui(App* app);
 void DrawEntityListGui(App* app);

@@ -309,7 +309,11 @@ void InitResources(App* app)
 
 	// - programs (and retrieve uniform indices)
 	app->screenRectProgramIdx = CreateProgram(app, "texturedQuad.glsl", "TEXTURED_QUAD");
-	app->rectUniformTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "uTexture");
+	app->albedoTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "albedo");
+	app->normalsTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "normals");
+	app->worldPositionTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "worldPos");
+	app->depthTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "depth");
+	app->drawModeUniform = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "drawMode");
 
 	app->texturedGeometryProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
 	app->geometryUniformTexture = glGetUniformLocation(app->programs[app->texturedGeometryProgramIdx].handle, "uTexture");
@@ -338,7 +342,8 @@ void InitResources(App* app)
 void Gui(App* app)
 {
 	ImGui::Begin("Window");
-	
+
+	DrawModeGui(app);
 	
 	DrawInfoGui(app);
 
@@ -369,6 +374,29 @@ void Gui(App* app)
 	ImGui::End();
 
 	DrawEntityGui(app);
+}
+
+void DrawModeGui(App* app)
+{
+	if (ImGui::BeginMenu("Draw mode"))
+	{
+		if (ImGui::MenuItem("Default"))
+			app->drawMode = DRAW_MODE::DEFAULT;
+
+		if (ImGui::MenuItem("Albedo"))
+			app->drawMode = DRAW_MODE::ALBEDO;
+
+		if (ImGui::MenuItem("Normals"))
+			app->drawMode = DRAW_MODE::NORMALS;
+
+		if (ImGui::MenuItem("World position"))
+			app->drawMode = DRAW_MODE::WORLD_POS;
+
+		if (ImGui::MenuItem("Depth"))
+			app->drawMode = DRAW_MODE::DEPTH;
+
+		ImGui::EndMenu();
+	}
 }
 
 void DrawInfoGui(App* app)
@@ -744,12 +772,6 @@ void Render(App* app)
 {
 	switch (app->mode)
 	{
-	case Mode_TexturedQuad:
-	{
-		RenderTexturedQuad(app);
-	}
-	break;
-
 	case Mode_Model:
 	{
 		RenderModels(app);
@@ -818,40 +840,6 @@ u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 	return vaoHandle;
 }
 
-
-void RenderTexturedQuad(App* app)
-{
-	// - clear the framebuffer
-	glClearColor(0.1, 0.1, 0.1, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// - set the viewport
-	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-	// - bind program
-	Program programTexGeo = app->programs[app->screenRectProgramIdx];
-	glUseProgram(programTexGeo.handle);
-	glBindVertexArray(app->vao);
-
-	// - set the blending state
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	// - bind the texture into unit 0
-	glUniform1i(app->rectUniformTexture, 0);
-	glActiveTexture(GL_TEXTURE0);
-
-	unsigned int texHandle = app->textures[app->diceTexIdx].handle;
-	glBindTexture(GL_TEXTURE_2D, texHandle);
-
-	// - draw
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-	glBindVertexArray(0);
-	glUseProgram(0);
-}
-
-
 void RenderModels(App* app)
 {
 	// - clear the framebuffer
@@ -873,8 +861,6 @@ void RenderModels(App* app)
 	// - bind program
 	Program programTexGeo = app->programs[app->texturedGeometryProgramIdx];
 	glUseProgram(programTexGeo.handle);
-
-	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->globalUniformBuffer.handle, app->globalParamsOffset, app->globalParamsSize);
 
 	int entityCount = app->entities.size();
 	for (int i = 0; i < entityCount; ++i)
@@ -925,15 +911,42 @@ void RenderModels(App* app)
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// - bind the texture into unit 0
-	glUniform1i(app->rectUniformTexture, 0);
-	glActiveTexture(GL_TEXTURE0);
+	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->globalUniformBuffer.handle, app->globalParamsOffset, app->globalParamsSize);
 
-	unsigned int texHandle = app->framebuffer.normalsTex;
-	glBindTexture(GL_TEXTURE_2D, texHandle);
+	// - bind the texture into unit 0
+	glUniform1i(app->albedoTexture, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.albedoTex);
+
+	glUniform1i(app->normalsTexture, 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.normalsTex);
+
+	glUniform1i(app->worldPositionTexture, 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.worldPosTex);
+
+	glUniform1i(app->depthTexture, 3);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.depthTex);
+	
+	glUniform1i(app->drawModeUniform, (int)app->drawMode);
 
 	// - draw
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	// - clean
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
