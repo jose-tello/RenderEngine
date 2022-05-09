@@ -81,8 +81,6 @@ struct App
     OpenGLInfo info;
     DRAW_MODE drawMode = DRAW_MODE::DEFAULT;
 
-
-
     Camera camera;
 
     u32 entityIdCount = 0;

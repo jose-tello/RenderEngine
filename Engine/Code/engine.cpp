@@ -371,9 +371,9 @@ void Gui(App* app)
 
 	DrawLightGui(app);
 
-	ImGui::End();
-
 	DrawEntityGui(app);
+	
+	ImGui::End();
 }
 
 void DrawModeGui(App* app)

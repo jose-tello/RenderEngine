@@ -254,3 +254,72 @@ u32 LoadModel(App* app, const char* filename)
 
     return modelIdx;
 }
+
+u32 LoadPlane(App* app)
+{
+    app->meshes.push_back(Mesh{});
+    Mesh& mesh = app->meshes.back();
+    u32 meshIdx = (u32)app->meshes.size() - 1u;
+
+    app->models.push_back(Model{});
+    Model& model = app->models.back();
+    model.meshIdx = meshIdx;
+    model.name = "Plane";
+    u32 modelIdx = (u32)app->models.size() - 1u;
+
+    app->entityIdCount++;
+    app->entities.push_back(Entity(std::string("Plane") + std::to_string(app->entityIdCount), modelIdx));
+
+    // create the vertex format
+    VertexBufferLayout vertexBufferLayout = {};
+    vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 0, 3, 0 });
+
+    vertexBufferLayout.attributes.push_back(VertexBufferAttribute(2, 2, vertexBufferLayout.stride));
+    vertexBufferLayout.stride += 2 * sizeof(float);
+    
+    std::vector<float> vertices;
+
+    //vertex 1
+    vertices.push_back(-1.0);
+    vertices.push_back(-1.0);
+    vertices.push_back(0.0);
+    vertices.push_back(0.0);
+    vertices.push_back(0.0);
+
+    //vertex 2
+    vertices.push_back(1.0);
+    vertices.push_back(-1.0);
+    vertices.push_back(0.0);
+    vertices.push_back(1.0);
+    vertices.push_back(0.0);
+
+    //vertex 3
+    vertices.push_back(1.0);
+    vertices.push_back(1.0);
+    vertices.push_back(0.0);
+    vertices.push_back(1.0);
+    vertices.push_back(1.0);
+
+    //vertex 4
+    vertices.push_back(-1.0);
+    vertices.push_back(1.0);
+    vertices.push_back(0.0);
+    vertices.push_back(0.0);
+    vertices.push_back(1.0);
+
+
+    std::vector<u32> indices;
+    indices.push_back(0);
+    indices.push_back(1);
+    indices.push_back(2);
+    indices.push_back(0);
+    indices.push_back(2);
+    indices.push_back(3);
+
+
+    Submesh submesh = {};
+    submesh.vertexBufferLayout = vertexBufferLayout;
+    submesh.vertices.swap(vertices);
+    submesh.indices.swap(indices);
+    mesh.submeshes.push_back(submesh);
+}
