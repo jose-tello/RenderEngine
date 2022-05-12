@@ -186,7 +186,6 @@ void Render(App* app);
 
 u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
-void RenderTexturedQuad(App* app);
 void RenderModels(App* app);
 
 //Error callback

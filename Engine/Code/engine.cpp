@@ -276,8 +276,7 @@ void InitResources(App* app)
 	vertexLayout.stride = 5 * sizeof(float);
 	vertexLayout.attributes.push_back(VertexBufferAttribute(0, 3, 0));
 	vertexLayout.attributes.push_back(VertexBufferAttribute(2, 2, 3 * sizeof(float)));
-	
-	LoadModel(app, "Patrick/Patrick.obj");
+
 	//LoadModel(app, "Room/Room #1.obj");
 
 	// - vertex buffers
@@ -324,6 +323,9 @@ void InitResources(App* app)
 	app->blackTexIdx = LoadTexture2D(app, "color_black.png");
 	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
+
+	LoadModel(app, "Patrick/Patrick.obj");
+	LoadPlane(app);
 
 	//uniform buffer
 	int maxUniformBufferSize;
