@@ -80,6 +80,7 @@ struct App
 {
     OpenGLInfo info;
     DRAW_MODE drawMode = DRAW_MODE::DEFAULT;
+    bool debugDrawLights = true;
 
     Camera camera;
 
@@ -146,6 +147,9 @@ struct App
     // VAO object to link our screen filling quad with our textured quad shader
     GLuint vao;
 
+    u32 sphereModel;
+    u32 planeModel;
+
     FrameBuffer framebuffer;
 };
 
@@ -187,6 +191,8 @@ void Render(App* app);
 u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
 void RenderModels(App* app);
+void DebugDrawLights(App* app);
+void RenderScene(App* app);
 
 //Error callback
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* useParam);

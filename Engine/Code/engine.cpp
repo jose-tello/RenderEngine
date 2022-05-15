@@ -318,13 +318,14 @@ void InitResources(App* app)
 	app->geometryUniformTexture = glGetUniformLocation(app->programs[app->texturedGeometryProgramIdx].handle, "uTexture");
 
 	// - textures
-	app->diceTexIdx = LoadTexture2D(app, "dice.png");
 	app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
+	app->diceTexIdx = LoadTexture2D(app, "dice.png");
 	app->blackTexIdx = LoadTexture2D(app, "color_black.png");
 	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
-	LoadModel(app, "Patrick/Patrick.obj");
+	LoadModel(app, "Patrick/Patrick.obj", true);
+	LoadModel(app, "DefaultShapes/Sphere.fbx");
 	LoadPlane(app);
 
 	//uniform buffer
@@ -346,6 +347,8 @@ void Gui(App* app)
 	ImGui::Begin("Window");
 
 	DrawModeGui(app);
+
+	ImGui::Checkbox("Debug draw lights", &app->debugDrawLights);
 	
 	DrawInfoGui(app);
 
@@ -777,6 +780,11 @@ void Render(App* app)
 	case Mode_Model:
 	{
 		RenderModels(app);
+
+		/*if (app->debugDrawLights == true)
+			DebugDrawLights(app);*/
+
+		RenderScene(app);
 	}
 	break;
 
@@ -854,8 +862,6 @@ void RenderModels(App* app)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// - set the viewport
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
@@ -872,6 +878,8 @@ void RenderModels(App* app)
 
 		int submeshCount = mesh.submeshes.size();
 
+		glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->localUniformBuffer.handle, app->entities[i].localParamsOffset, app->entities[i].localParamsSize);
+
 		for (int j = 0; j < submeshCount; ++j)
 		{
 			u32 vao = FindVAO(mesh, j, programTexGeo);
@@ -887,7 +895,74 @@ void RenderModels(App* app)
 				glActiveTexture(GL_TEXTURE0);
 			}
 			
-			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->localUniformBuffer.handle, app->entities[i].localParamsOffset, app->entities[i].localParamsSize);
+			Submesh& submesh = mesh.submeshes[j];
+			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+		}
+	}
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void DebugDrawLights(App* app)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
+
+	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+
+	glEnable(GL_DEPTH_TEST);
+
+	// - set the viewport
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+	// - bind program
+	Program programTexGeo = app->programs[app->texturedGeometryProgramIdx];
+	glUseProgram(programTexGeo.handle);
+
+	int lightCount = app->lights.size();
+	for (int i = 0; i < lightCount; ++i)
+	{
+		int modelIdx = 0;
+
+		switch (app->lights[i].type)
+		{
+		case LIGHT_TYPE::DIRECTIONAL :
+			modelIdx = app->planeModel;
+				break;
+
+		case LIGHT_TYPE::POINT :
+			modelIdx = app->sphereModel;
+			break;
+
+		default:
+			ELOG("Need to add light type");
+			break;
+		}
+
+		Model& model = app->models[modelIdx];
+		Mesh& mesh = app->meshes[model.meshIdx];
+
+		glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->localUniformBuffer.handle, app->entities[i].localParamsOffset, app->entities[i].localParamsSize);
+		
+		int submeshCount = mesh.submeshes.size();
+
+		for (int j = 0; j < submeshCount; ++j)
+		{
+			u32 vao = FindVAO(mesh, j, programTexGeo);
+			glBindVertexArray(vao);
+
+			u32 materialIdx = model.materialIdx[j];
+			Material& material = app->materials[materialIdx];
+
+			if (material.albedoTextureIdx != UINT32_MAX)
+			{
+				glBindTexture(GL_TEXTURE_2D, app->textures[material.albedoTextureIdx].handle);
+				glUniform1i(app->geometryUniformTexture, 0);
+				glActiveTexture(GL_TEXTURE0);
+			}
 
 			Submesh& submesh = mesh.submeshes[j];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
@@ -897,6 +972,12 @@ void RenderModels(App* app)
 	glBindVertexArray(0);
 	glUseProgram(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void RenderScene(App* app)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	glClearColor(0.1, 0.1, 0.1, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -905,7 +986,7 @@ void RenderModels(App* app)
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
 	// - bind program
-	programTexGeo = app->programs[app->screenRectProgramIdx];
+	Program programTexGeo = app->programs[app->screenRectProgramIdx];
 	glUseProgram(programTexGeo.handle);
 	glBindVertexArray(app->vao);
 
@@ -931,7 +1012,7 @@ void RenderModels(App* app)
 	glUniform1i(app->depthTexture, 3);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, app->framebuffer.depthTex);
-	
+
 	glUniform1i(app->drawModeUniform, (int)app->drawMode);
 
 	// - draw

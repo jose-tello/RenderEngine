@@ -5,6 +5,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "ModelStructures.h"
 
 
 void ProcessAssimpMesh(const aiScene* scene, aiMesh *mesh, Mesh *myMesh, u32 baseMeshMaterialIndex, std::vector<u32>& submeshMaterialIndices)
@@ -168,7 +169,7 @@ void ProcessAssimpNode(const aiScene* scene, aiNode *node, Mesh *myMesh, u32 bas
     }
 }
 
-u32 LoadModel(App* app, const char* filename)
+u32 LoadModel(App* app, const char* filename, bool createEntity)
 {
     const aiScene* scene = aiImportFile(filename,
                                         aiProcess_Triangulate           |
@@ -196,8 +197,12 @@ u32 LoadModel(App* app, const char* filename)
     model.name = filename;
     u32 modelIdx = (u32)app->models.size() - 1u;
 
-    app->entityIdCount++;
-    app->entities.push_back(Entity(std::string(filename) + std::to_string(app->entityIdCount), modelIdx));
+    if (createEntity == true)
+    {
+        app->entityIdCount++;
+        app->entities.push_back(Entity(std::string(filename) + std::to_string(app->entityIdCount), modelIdx));
+    }
+
 
     String directory = GetDirectoryPart(MakeString(filename));
 
@@ -368,151 +373,6 @@ u32 LoadPlane(App* app)
     submesh.indexOffset = indicesOffset;
     indicesOffset += indicesSize;
     
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    app->materials.push_back(Material{});
-    Material& material = app->materials.back();
-    material.name = "Default";
-    material.albedo = glm::vec3(150.f, 150.f, 150.f);
-    material.emissive = glm::vec3(0.f, 0.f, 0.f);
-    material.smoothness = 0.f;
-
-    material.albedoTextureIdx = app->whiteTexIdx;
-
-    model.materialIdx.push_back(app->materials.size() - 1);
-
-    return modelIdx;
-}
-
-
-u32 LoadCube(App* app)
-{
-    app->meshes.push_back(Mesh{});
-    Mesh& mesh = app->meshes.back();
-    u32 meshIdx = (u32)app->meshes.size() - 1u;
-
-    app->models.push_back(Model{});
-    Model& model = app->models.back();
-    model.meshIdx = meshIdx;
-    model.name = "Cube";
-    u32 modelIdx = (u32)app->models.size() - 1u;
-
-    // create the vertex format
-    VertexBufferLayout vertexBufferLayout = {};
-    vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 0, 3, 0 });
-
-    vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 1, 3, 3 * sizeof(float) });
-    vertexBufferLayout.stride = 6 * sizeof(float);
-
-    vertexBufferLayout.attributes.push_back(VertexBufferAttribute(2, 2, vertexBufferLayout.stride));
-    vertexBufferLayout.stride += 2 * sizeof(float);
-
-    std::vector<float> vertices;
-
-    //vertex 1
-    vertices.push_back(1.0);    vertices.push_back(1.0);    vertices.push_back(-1.0);
-    
-    vertices.push_back(0.0);
-    vertices.push_back(1.0);
-    vertices.push_back(0.0);
-    
-    vertices.push_back(0.875);    vertices.push_back(0.5);
-
-    //vertex2
-    vertices.push_back(1.0);    vertices.push_back(-1.0);    vertices.push_back(-1.0);
-    
-    vertices.push_back(0.0);
-    vertices.push_back(0.0);
-    vertices.push_back(1.0);
-    
-    vertices.push_back(0.625);    vertices.push_back(0.75);
-
-    //vertex3
-    vertices.push_back(1.0);    vertices.push_back(1.0);    vertices.push_back(1.0);
-    
-    vertices.push_back(-1.0);
-    vertices.push_back(0.0);
-    vertices.push_back(0.0);
-    
-    vertices.push_back(0.625);    vertices.push_back(0.5);
-
-    //vertex4
-    vertices.push_back(1.0);    vertices.push_back(-1.0);    vertices.push_back(1.0);
-    
-    vertices.push_back(0.0);
-    vertices.push_back(-1.0);
-    vertices.push_back(0.0);
-    
-    vertices.push_back(0.375);    vertices.push_back(1.0);
-
-    //vertex5
-    vertices.push_back(-1.0);    vertices.push_back(1.0);    vertices.push_back(-1.0);
-   
-    vertices.push_back(1.0);
-    vertices.push_back(0.0);
-    vertices.push_back(0.0);
-    
-    vertices.push_back(0.375);    vertices.push_back(0.75);
-
-    //vertex6
-    vertices.push_back(-1.0);    vertices.push_back(-1.0);    vertices.push_back(-1.0);
-    
-    
-    vertices.push_back(0.625);    vertices.push_back(0.0);
-
-    //vertex7
-    vertices.push_back(-1.0);    vertices.push_back(1.0);    vertices.push_back(1.0);
-   
-    
-    vertices.push_back(0.375);    vertices.push_back(0.25);
-
-    //vertex8
-    vertices.push_back(-1.0);    vertices.push_back(-1.0);    vertices.push_back(1.0);
-    
-    
-    vertices.push_back(0.375);    vertices.push_back(0.0);
-
-    std::vector<u32> indices;
-    indices.push_back(0);
-    indices.push_back(1);
-    indices.push_back(2);
-    indices.push_back(0);
-    indices.push_back(2);
-    indices.push_back(3);
-
-    Submesh submesh = {};
-    submesh.vertexBufferLayout = vertexBufferLayout;
-    submesh.vertices.swap(vertices);
-    submesh.indices.swap(indices);
-    mesh.submeshes.push_back(submesh);
-
-    u32 vertexBufferSize = submesh.vertices.size() * sizeof(float);
-    u32 indexBufferSize = submesh.indices.size() * sizeof(u32);
-
-    glGenBuffers(1, &mesh.vertexBufferHandle);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBufferHandle);
-    glBufferData(GL_ARRAY_BUFFER, vertexBufferSize, NULL, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &mesh.indexBufferHandle);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBufferHandle);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, NULL, GL_STATIC_DRAW);
-
-    u32 indicesOffset = 0;
-    u32 verticesOffset = 0;
-
-    const void* verticesData = submesh.vertices.data();
-    const u32   verticesSize = submesh.vertices.size() * sizeof(float);
-    glBufferSubData(GL_ARRAY_BUFFER, verticesOffset, verticesSize, verticesData);
-    submesh.vertexOffset = verticesOffset;
-    verticesOffset += verticesSize;
-
-    const void* indicesData = submesh.indices.data();
-    const u32   indicesSize = submesh.indices.size() * sizeof(u32);
-    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, indicesOffset, indicesSize, indicesData);
-    submesh.indexOffset = indicesOffset;
-    indicesOffset += indicesSize;
-
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
