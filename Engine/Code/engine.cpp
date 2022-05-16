@@ -325,8 +325,8 @@ void InitResources(App* app)
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
 	LoadModel(app, "Patrick/Patrick.obj", true);
-	LoadModel(app, "DefaultShapes/Sphere.fbx");
-	LoadPlane(app);
+	app->sphereModel = LoadModel(app, "DefaultShapes/Sphere.fbx");
+	app->planeModel = LoadPlane(app);
 
 	//uniform buffer
 	int maxUniformBufferSize;
@@ -335,6 +335,7 @@ void InitResources(App* app)
 	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniformAlignment);
 
 	app->localUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
+	app->debugLightUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 	app->globalUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 
 	app->framebuffer.Regenerate(app->displaySize.x, app->displaySize.y);
@@ -679,6 +680,7 @@ void Update(App* app)
 	UpdateCamera(app);
 
 	FillUniformGlobalParams(app);
+	FillUniformDebugLightParams(app);
 	FillUniformLocalParams(app);
 }
 
@@ -741,6 +743,34 @@ void FillUniformLocalParams(App* app)
 }
 
 
+void FillUniformDebugLightParams(App* app)
+{
+	BindBuffer(app->debugLightUniformBuffer);
+	MapBuffer(app->debugLightUniformBuffer, GL_WRITE_ONLY);
+
+	glm::mat4 projection = app->camera.GetProjectionMatrix();
+	glm::mat4 view = app->camera.GetViewMatrix();
+
+	int lightCount = app->lights.size();
+	for (int i = 0; i < lightCount; ++i)
+	{
+		AlignHead(app->debugLightUniformBuffer, app->debugLightUniformBuffer.alignement);
+
+		app->lights[i].localParamsOffset = app->debugLightUniformBuffer.head;
+
+		glm::mat4 worldTransform = app->lights[i].CalculateWorldTransform();
+		PushMat4(app->debugLightUniformBuffer, worldTransform);
+
+		glm::mat4 worldViewProjection = projection * view * worldTransform;
+		PushMat4(app->debugLightUniformBuffer, worldViewProjection);
+
+		app->lights[i].localParamsSize = app->debugLightUniformBuffer.head - app->lights[i].localParamsOffset;
+	}
+
+	UnmapBuffer(app->debugLightUniformBuffer);
+}
+
+
 void FillUniformGlobalParams(App* app)
 {
 	BindBuffer(app->globalUniformBuffer);
@@ -781,8 +811,8 @@ void Render(App* app)
 	{
 		RenderModels(app);
 
-		/*if (app->debugDrawLights == true)
-			DebugDrawLights(app);*/
+		if (app->debugDrawLights == true)
+			DebugDrawLights(app);
 
 		RenderScene(app);
 	}
@@ -945,7 +975,7 @@ void DebugDrawLights(App* app)
 		Model& model = app->models[modelIdx];
 		Mesh& mesh = app->meshes[model.meshIdx];
 
-		glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->localUniformBuffer.handle, app->entities[i].localParamsOffset, app->entities[i].localParamsSize);
+		glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->debugLightUniformBuffer.handle, app->lights[i].localParamsOffset, app->lights[i].localParamsSize);
 		
 		int submeshCount = mesh.submeshes.size();
 
@@ -960,6 +990,12 @@ void DebugDrawLights(App* app)
 			if (material.albedoTextureIdx != UINT32_MAX)
 			{
 				glBindTexture(GL_TEXTURE_2D, app->textures[material.albedoTextureIdx].handle);
+				glUniform1i(app->geometryUniformTexture, 0);
+				glActiveTexture(GL_TEXTURE0);
+			}
+			else
+			{
+				glBindTexture(GL_TEXTURE_2D, app->textures[app->whiteTexIdx].handle);
 				glUniform1i(app->geometryUniformTexture, 0);
 				glActiveTexture(GL_TEXTURE0);
 			}

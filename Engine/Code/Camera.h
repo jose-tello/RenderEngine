@@ -4,7 +4,7 @@
 
 #define DEFAULT_FOV 60.f
 #define DEFAULT_Z_NEAR 0.1f
-#define DEFAULT_Z_FAR 1000.f
+#define DEFAULT_Z_FAR 500.f
 
 class Camera
 {
