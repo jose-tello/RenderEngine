@@ -15,8 +15,16 @@ glm::mat4 Light::CalculateWorldTransform()
 	switch (type)
 	{
 	case LIGHT_TYPE::DIRECTIONAL :
-		transform = glm::lookAt(direction - (glm::vec3(0.f, 0.f, 0.f)) * 4.f, glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f));
+	{
+		glm::vec3 normDir = glm::normalize(direction);
+		glm::vec3 pos = (direction - glm::vec3(0.f, 0.f, 0.f)) * 8.f;
+
+		transform = glm::translate(pos);
+
+		transform *= glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::normalize(pos), glm::vec3(0.f, 1.f, 0.f));
+
 		return transform;
+	}
 		break;
 
 	case LIGHT_TYPE::POINT :
