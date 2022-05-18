@@ -17,11 +17,11 @@ glm::mat4 Light::CalculateWorldTransform()
 	case LIGHT_TYPE::DIRECTIONAL :
 	{
 		glm::vec3 normDir = glm::normalize(direction);
-		glm::vec3 pos = (direction - glm::vec3(0.f, 0.f, 0.f)) * 8.f;
+		glm::vec3 pos = (normDir) * DIRECTIONAL_LIGHT_DEBUG_DRAW_DISTANCE;
 
-		transform = glm::translate(pos);
-
-		transform *= glm::lookAt(glm::vec3(0.f, 0.f, 0.f), glm::normalize(pos), glm::vec3(0.f, 1.f, 0.f));
+		
+		glm::mat4 rot = glm::lookAt(pos, pos + normDir, glm::vec3(0.f, 1.f, 0.f));
+		transform = glm::inverse(rot) /** glm::translate(glm::mat4(1.0f), pos)*/;
 
 		return transform;
 	}

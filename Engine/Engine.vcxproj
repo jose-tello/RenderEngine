@@ -184,7 +184,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\jdiaz\Projects\AGP\Engine\ThirdParty\glfw\lib-vc2019;C:\Users\jdiaz\Projects\AGP\Engine\ThirdParty\Assimp\lib\windows;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\Github\RenderEngine\Engine\ThirdParty\glfw\lib-vc2019;E:\Github\RenderEngine\Engine\ThirdParty\Assimp\lib\windows</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

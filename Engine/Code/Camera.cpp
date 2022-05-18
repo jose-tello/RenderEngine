@@ -1,8 +1,7 @@
 #include "Camera.h"
 
 Camera::Camera() :
-	position(0.f, 0.f, 10.f),
-	rotation(0.f, 0.f, 0.f),
+	position(0.f, 4.f, 10.f),
 	aspectRatio(0.f),
 	FOV(DEFAULT_FOV),
 	zNear(DEFAULT_Z_NEAR),
@@ -17,6 +16,54 @@ Camera::~Camera()
 }
 
 
+void Camera::HandleInput(Input* input)
+{
+	if (input->keys[K_W] == BUTTON_PRESS || input->keys[K_S] == BUTTON_PRESSED)
+	{
+		currentDir = glm::normalize(target - position);
+	}
+
+
+	if (input->keys[K_W] == BUTTON_PRESSED)
+	{
+		position += currentDir * 0.5f;
+	}
+
+	else if (input->keys[K_S] == BUTTON_PRESSED)
+	{
+		position -= currentDir * 0.5f;
+	}
+
+	if (input->keys[K_A] == BUTTON_PRESSED)
+	{
+		glm::vec3 left = glm::cross(glm::vec3(0.f, 1.f, 0.f), glm::normalize(target - position));
+		left = glm::normalize(left);
+		position += left * 0.5f;
+	}
+
+	if (input->keys[K_D] == BUTTON_PRESSED)
+	{
+		glm::vec3 left = glm::cross(glm::vec3(0.f, 1.f, 0.f), glm::normalize(target - position));
+		left = glm::normalize(left);
+		position -= left * 0.5f;
+	}
+
+	if (input->keys[K_Q] == BUTTON_PRESSED)
+	{
+		glm::vec3 up(0.f, 1.f, 0.f);
+		position += up * 0.5f;
+	}
+
+	if (input->keys[K_E] == BUTTON_PRESSED)
+	{
+		glm::vec3 up(0.f, 1.f, 0.f);
+		position -= up * 0.5f;
+	}
+
+	
+}
+
+
 float* Camera::GetPosition()
 {
 	return &position.x;
@@ -26,12 +73,6 @@ float* Camera::GetPosition()
 glm::vec3 Camera::GetPositionV3() const
 {
 	return position;
-}
-
-
-float* Camera::GetRotation()
-{
-	return &rotation.x;
 }
 
 

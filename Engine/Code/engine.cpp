@@ -325,8 +325,31 @@ void InitResources(App* app)
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
 	LoadModel(app, "Patrick/Patrick.obj", true);
+	app->entities[0].scale = glm::vec3(0.4f, 0.4f, 0.4f);
+	app->entities[0].position = glm::vec3(0.0f, 1.9f, 0.6f);
+	LoadModel(app, "Room/Room #1.obj", true);
 	app->sphereModel = LoadModel(app, "DefaultShapes/Sphere.fbx");
 	app->planeModel = LoadPlane(app);
+
+
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(3.f, 4.f, 3.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-3.f, 4.f, 3.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(3.f, 4.f, -3.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-3.f, 4.f, -3.f)));
+
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(12.f, 4.f, 8.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-12.f, 4.f, 8.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(12.f, 4.f, -8.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-12.f, 4.f, -8.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(10.f, 4.f, 10.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-10.f, 4.f, 10.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(10.f, 4.f, -10.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-10.f, 4.f, -10.f)));
+
+
+	app->lights.push_back(Light(LIGHT_TYPE::DIRECTIONAL, glm::vec3(0.5, 0.2, 0.2), glm::vec3(0.0, 1.0, 0.5), glm::vec3(0.f, 0.f, 0.f)));
+	app->lights.push_back(Light(LIGHT_TYPE::DIRECTIONAL, glm::vec3(0.5, 0.2, 0.2), glm::vec3(0.5, 1.0, 0.0), glm::vec3(0.f, 0.f, 0.f)));
+
 
 	//uniform buffer
 	int maxUniformBufferSize;
@@ -575,7 +598,7 @@ void DrawCameraGui(App* app)
 		ImGui::NewLine();
 
 		ImGui::DragFloat3("Position", app->camera.GetPosition(), 0.05f);
-		ImGui::DragFloat3("Rotation", app->camera.GetRotation(), 0.05f);
+		ImGui::DragFloat3("Target pos", app->camera.GetTarget(), 0.05f);
 
 		ImGui::NewLine();
 
@@ -712,6 +735,8 @@ void UpdateCamera(App* app)
 	{
 		app->camera.SetAspectRatio(app->displaySize.x / app->displaySize.y);
 	}
+
+	app->camera.HandleInput(&app->input);
 }
 
 
@@ -888,10 +913,11 @@ void RenderModels(App* app)
 	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
 	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 
-	glClearColor(0.1, 0.1, 0.1, 1.0);
+	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_CULL_FACE);
 
 	// - set the viewport
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);

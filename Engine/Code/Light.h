@@ -1,6 +1,8 @@
 #pragma once
 #include "platform.h"
 
+#define DIRECTIONAL_LIGHT_DEBUG_DRAW_DISTANCE 8.f
+
 enum class LIGHT_TYPE
 {
 	DIRECTIONAL = 0,

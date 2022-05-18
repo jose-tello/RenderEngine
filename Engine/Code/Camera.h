@@ -12,10 +12,11 @@ public:
 	Camera();
 	~Camera();
 
+	void HandleInput(Input* input);
+
+
 	float* GetPosition();
 	glm::vec3 GetPositionV3() const;
-
-	float* GetRotation();
 
 	void SetAspectRatio(float ratio);
 
@@ -32,6 +33,8 @@ public:
 private:
 	glm::vec3 position;
 	glm::vec3 rotation;
+
+	glm::vec3 currentDir;
 
 	float aspectRatio;
 	float FOV;
