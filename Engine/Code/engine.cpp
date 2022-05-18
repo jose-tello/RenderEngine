@@ -325,12 +325,15 @@ void InitResources(App* app)
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
 	LoadModel(app, "Patrick/Patrick.obj", true);
-	app->entities[0].scale = glm::vec3(0.4f, 0.4f, 0.4f);
-	app->entities[0].position = glm::vec3(0.0f, 1.9f, 0.6f);
+	if (app->entities.size() != 0)
+	{
+		app->entities[0].scale = glm::vec3(0.4f, 0.4f, 0.4f);
+		app->entities[0].position = glm::vec3(0.0f, 1.9f, 0.6f);
+	}
+
 	LoadModel(app, "Room/Room #1.obj", true);
 	app->sphereModel = LoadModel(app, "DefaultShapes/Sphere.fbx");
 	app->planeModel = LoadPlane(app);
-
 
 	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(3.f, 4.f, 3.f)));
 	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-3.f, 4.f, 3.f)));
