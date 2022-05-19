@@ -1099,6 +1099,8 @@ void LightPass(App* app)
 	glClearColor(0.1, 0.1, 0.1, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glDisable(GL_DEPTH_TEST);
+
 	// - set the viewport
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
