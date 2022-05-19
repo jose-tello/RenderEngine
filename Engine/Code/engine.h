@@ -169,7 +169,17 @@ u32 LoadTexture2D(App* app, const char* filepath);
 void Init(App* app);
 
 void GetAppInfo(App* app);
-void InitResources(App* app);
+
+void InitRect(App* app);
+void InitPrograms(App* app);
+void InitTextures(App* app);
+void InitScene(App* app);
+void InitUniformBuffers(App* app);
+void InitFramebuffer(App* app);
+
+void InitBloomTextures(App* app);
+
+
 
 //GUI------------------------------------------------------------------
 void Gui(App* app);

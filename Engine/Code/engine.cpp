@@ -238,7 +238,12 @@ void Init(App* app)
 {
 	GetAppInfo(app);
 
-	InitResources(app);
+	InitRect(app);
+	InitPrograms(app);
+	InitTextures(app);
+	InitScene(app);
+	InitUniformBuffers(app);
+	InitFramebuffer(app);
 
 	if (GLVersion.major > 4 ||  (GLVersion.major == 4 && GLVersion.minor >= 3))
 	{
@@ -266,7 +271,7 @@ void GetAppInfo(App* app)
 }
 
 
-void InitResources(App* app)
+void InitRect(App* app)
 {
 	//Create screen rect
 	Model screenRect = {};
@@ -276,8 +281,6 @@ void InitResources(App* app)
 	vertexLayout.stride = 5 * sizeof(float);
 	vertexLayout.attributes.push_back(VertexBufferAttribute(0, 3, 0));
 	vertexLayout.attributes.push_back(VertexBufferAttribute(2, 2, 3 * sizeof(float)));
-
-	//LoadModel(app, "Room/Room #1.obj");
 
 	// - vertex buffers
 	glGenBuffers(1, &app->embeddedVertices);
@@ -299,13 +302,17 @@ void InitResources(App* app)
 	glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	
+
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
 	glBindVertexArray(0);
+}
 
+
+void InitPrograms(App* app)
+{
 	// - programs (and retrieve uniform indices)
 	app->screenRectProgramIdx = CreateProgram(app, "texturedQuad.glsl", "TEXTURED_QUAD");
 	app->albedoTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "albedo");	//TODO ask what to do about these
@@ -319,15 +326,22 @@ void InitResources(App* app)
 	app->geometryUniformTexture = glGetUniformLocation(app->programs[app->texturedGeometryProgramIdx].handle, "uTexture");
 
 	app->lightProgramIdx = CreateProgram(app, "lightPass.glsl", "LIGHT_PASS");
+}
 
 
+void InitTextures(App* app)
+{
 	// - textures
 	app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
 	app->diceTexIdx = LoadTexture2D(app, "dice.png");
 	app->blackTexIdx = LoadTexture2D(app, "color_black.png");
 	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
+}
 
+
+void InitScene(App* app)
+{
 	LoadModel(app, "Patrick/Patrick.obj", true);
 	if (app->entities.size() != 0)
 	{
@@ -356,8 +370,11 @@ void InitResources(App* app)
 
 	app->lights.push_back(Light(LIGHT_TYPE::DIRECTIONAL, glm::vec3(0.5, 0.2, 0.2), glm::vec3(0.0, 1.0, 0.5), glm::vec3(0.f, 0.f, 0.f)));
 	app->lights.push_back(Light(LIGHT_TYPE::DIRECTIONAL, glm::vec3(0.5, 0.2, 0.2), glm::vec3(0.5, 1.0, 0.0), glm::vec3(0.f, 0.f, 0.f)));
+}
 
 
+void InitUniformBuffers(App* app)
+{
 	//uniform buffer
 	int maxUniformBufferSize;
 	int uniformAlignment;
@@ -368,7 +385,13 @@ void InitResources(App* app)
 	app->debugLightUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 	app->materialUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 	app->globalUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
+}
 
+
+
+
+void InitFramebuffer(App* app)
+{
 	//Generate framebuffer
 	//Albedo
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
