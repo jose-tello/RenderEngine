@@ -95,9 +95,13 @@ struct Material
 	glm::vec3 emissive;
 
 	float smoothness;
+
 	u32 albedoTextureIdx;
 	u32 emissiveTextureIdx;
 	u32 specularTextureIdx;
 	u32 normalsTextureIdx;
 	u32 bumpTextureIdx;
+
+	u32 localParamsOffset = 0;
+	u32 localParamsSize = 0;
 };

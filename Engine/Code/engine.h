@@ -98,6 +98,7 @@ struct App
     glm::ivec2 displaySize;
     Buffer localUniformBuffer;
     Buffer debugLightUniformBuffer;
+    Buffer materialUniformBuffer;
     Buffer globalUniformBuffer;
 
     int globalParamsOffset = -1;
@@ -185,6 +186,7 @@ void CheckToUpdateShaders(App* app);
 void UpdateCamera(App* app);
 void FillUniformLocalParams(App* app);
 void FillUniformDebugLightParams(App* app);
+void FillUniformMaterialParams(App* app);
 void FillUniformGlobalParams(App* app);
 
 //Render----------------------------------------------------------------

@@ -362,6 +362,7 @@ void InitResources(App* app)
 
 	app->localUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 	app->debugLightUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
+	app->materialUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 	app->globalUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 
 	app->framebuffer.Regenerate(app->displaySize.x, app->displaySize.y);
@@ -707,6 +708,7 @@ void Update(App* app)
 
 	FillUniformGlobalParams(app);
 	FillUniformDebugLightParams(app);
+	FillUniformMaterialParams(app);
 	FillUniformLocalParams(app);
 }
 
@@ -797,6 +799,30 @@ void FillUniformDebugLightParams(App* app)
 
 	UnmapBuffer(app->debugLightUniformBuffer);
 }
+
+
+void FillUniformMaterialParams(App* app)
+{
+	BindBuffer(app->materialUniformBuffer);
+	MapBuffer(app->materialUniformBuffer, GL_WRITE_ONLY);
+
+	int materialCount = app->materials.size();
+	for (int i = 0; i < materialCount; ++i)
+	{
+		AlignHead(app->materialUniformBuffer, app->materialUniformBuffer.alignement);
+
+		app->materials[i].localParamsOffset = app->materialUniformBuffer.head;
+
+		PushVec3(app->materialUniformBuffer, app->materials[i].albedo);
+
+		PushVec3(app->materialUniformBuffer, app->materials[i].emissive);
+
+		app->materials[i].localParamsSize = app->materialUniformBuffer.head - app->materials[i].localParamsOffset;
+	}
+
+	UnmapBuffer(app->materialUniformBuffer);
+}
+
 
 
 void FillUniformGlobalParams(App* app)
@@ -946,6 +972,8 @@ void RenderModels(App* app)
 
 			u32 materialIdx = model.materialIdx[j];
 			Material& material = app->materials[materialIdx];
+
+			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(2), app->materialUniformBuffer.handle, material.localParamsOffset, material.localParamsSize);
 
 			if (material.albedoTextureIdx != UINT32_MAX)
 			{
