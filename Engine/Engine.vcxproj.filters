@@ -145,5 +145,8 @@
     <None Include="WorkingDir\texturedQuad.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="WorkingDir\lightPass.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

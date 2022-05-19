@@ -59,6 +59,7 @@
     <ClInclude Include="ThirdParty\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="WorkingDir\lightPass.glsl" />
     <None Include="WorkingDir\shaders.glsl" />
     <None Include="WorkingDir\texturedQuad.glsl" />
   </ItemGroup>

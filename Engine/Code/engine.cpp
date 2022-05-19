@@ -308,14 +308,18 @@ void InitResources(App* app)
 
 	// - programs (and retrieve uniform indices)
 	app->screenRectProgramIdx = CreateProgram(app, "texturedQuad.glsl", "TEXTURED_QUAD");
-	app->albedoTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "albedo");
+	app->albedoTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "albedo");	//TODO ask what to do about these
 	app->normalsTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "normals");
 	app->worldPositionTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "worldPos");
+	app->defaultTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "defaultTexture");
 	app->depthTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "depth");
 	app->drawModeUniform = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "drawMode");
 
 	app->texturedGeometryProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
 	app->geometryUniformTexture = glGetUniformLocation(app->programs[app->texturedGeometryProgramIdx].handle, "uTexture");
+
+	app->lightProgramIdx = CreateProgram(app, "lightPass.glsl", "LIGHT_PASS");
+
 
 	// - textures
 	app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
@@ -375,6 +379,9 @@ void InitResources(App* app)
 	//World Pos
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
 
+	//Default
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
+	
 	//Depth
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT);
 
@@ -881,6 +888,7 @@ void Render(App* app)
 		if (app->debugDrawLights == true)
 			DebugDrawLights(app);
 
+		LightPass(app);
 		RenderScene(app);
 	}
 	break;
@@ -955,7 +963,7 @@ void RenderModels(App* app)
 	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
 	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 
-	glClearColor(0.f, 0.f, 0.f, 1.f);
+	glClearColor(0.1, 0.1, 0.1, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
@@ -1081,6 +1089,66 @@ void DebugDrawLights(App* app)
 }
 
 
+void LightPass(App* app)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
+
+	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT3 };
+	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+
+	glClearColor(0.1, 0.1, 0.1, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// - set the viewport
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+	// - bind program
+	Program programTexGeo = app->programs[app->lightProgramIdx];
+	glUseProgram(programTexGeo.handle);
+	glBindVertexArray(app->vao);
+
+	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->globalUniformBuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+
+	GLuint alb = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "albedo");	//TODO ask what to do about these
+	GLuint norm = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "normals");
+	GLuint pos = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "worldPos");
+
+	// - bind the texture into unit 0
+	glUniform1i(alb, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[0].handle);
+
+	glUniform1i(norm, 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[1].handle);
+
+	glUniform1i(pos, 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[2].handle);
+
+	// - draw
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	// - clean
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
 void RenderScene(App* app)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1095,10 +1163,6 @@ void RenderScene(App* app)
 	Program programTexGeo = app->programs[app->screenRectProgramIdx];
 	glUseProgram(programTexGeo.handle);
 	glBindVertexArray(app->vao);
-
-	// - set the blending state
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->globalUniformBuffer.handle, app->globalParamsOffset, app->globalParamsSize);
 
@@ -1115,9 +1179,13 @@ void RenderScene(App* app)
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[2].handle);
 
-	glUniform1i(app->depthTexture, 3);
+	glUniform1i(app->defaultTexture, 3);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[3].handle);
+
+	glUniform1i(app->depthTexture, 4);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[4].handle);
 
 	glUniform1i(app->drawModeUniform, (int)app->drawMode);
 
@@ -1125,6 +1193,9 @@ void RenderScene(App* app)
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	// - clean
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, 0);
 

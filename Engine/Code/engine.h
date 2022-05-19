@@ -121,6 +121,8 @@ struct App
     // program indices
     u32 texturedGeometryProgramIdx;
     u32 screenRectProgramIdx;
+
+    u32 lightProgramIdx;
     
     // texture indices
     u32 diceTexIdx;
@@ -141,6 +143,7 @@ struct App
     GLuint albedoTexture;
     GLuint normalsTexture;
     GLuint worldPositionTexture;
+    GLuint defaultTexture;
     GLuint depthTexture;
     GLuint drawModeUniform;
 
@@ -196,6 +199,7 @@ u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
 void RenderModels(App* app);
 void DebugDrawLights(App* app);
+void LightPass(App* app);
 void RenderScene(App* app);
 
 //Error callback
