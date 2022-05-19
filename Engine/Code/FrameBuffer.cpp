@@ -1,46 +1,59 @@
 #include "FrameBuffer.h"
 #include "glad/glad.h"
 
-FrameBuffer::FrameBuffer() : 
-	handle(0u),
-	albedoTex(0u),
-	normalsTex(0u),
-	worldPosTex(0u),
-	depthTex(0u)
+TexObj::TexObj(u32 handle, float sizeX, float sizeY, int internalFormat, int format, int type) :
+	handle(handle),
+	sizeX(sizeX),
+	sizeY(sizeY),
+	internalFormat(internalFormat),
+	format(format),
+	type(type)
 {
-	
+}
+
+FrameBuffer::FrameBuffer() : 
+	handle(0u)
+{
 }
 
 
 FrameBuffer::~FrameBuffer()
 {
-	//delete ALL
+	glDeleteFramebuffers(1, &handle);
+
+	int textureCount = textures.size();
+	for (int i = 0; i < textureCount; ++i)
+	{
+		glDeleteTextures(1, &textures[0].handle);
+	}
 }
 
 
 void FrameBuffer::Regenerate(float displaySizeX, float displaySizeY)
 {
-	glDeleteTextures(1, &albedoTex);
-	glDeleteTextures(1, &normalsTex);
-	glDeleteTextures(1, &worldPosTex);
-	glDeleteTextures(1, &depthTex);
 	glDeleteFramebuffers(1, &handle);
 
-	//Albedo
-	glGenTextures(1, &albedoTex);
-	glBindTexture(GL_TEXTURE_2D, albedoTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, displaySizeX, displaySizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);	//TODO ask wrap r, s, t
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	int textureCount = textures.size();
+	for (int i = 0; i < textureCount; ++i)
+	{
+		PushTexture(displaySizeX, displaySizeY, textures[0].internalFormat, textures[0].format, textures[0].type);
 
-	//Normals
-	glGenTextures(1, &normalsTex);
-	glBindTexture(GL_TEXTURE_2D, normalsTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, displaySizeX, displaySizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glDeleteTextures(1, &textures[0].handle);
+		textures.erase(textures.begin());
+	}
+
+	AttachTextures();
+
+	CheckStatus();
+}
+
+
+void FrameBuffer::PushTexture(float sizeX, float sizeY, int internalFormat, int format, int type)
+{
+	u32 texHandle;
+	glGenTextures(1, &texHandle);
+	glBindTexture(GL_TEXTURE_2D, texHandle);
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, sizeX, sizeY, 0, format, type, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);	
@@ -48,36 +61,29 @@ void FrameBuffer::Regenerate(float displaySizeX, float displaySizeY)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	textures.push_back(TexObj(texHandle, sizeX, sizeY, internalFormat, format, type));
+}
 
-	//World Pos
-	glGenTextures(1, &worldPosTex);
-	glBindTexture(GL_TEXTURE_2D, worldPosTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, displaySizeX, displaySizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D, 0);
 
-	//Depth
-	glGenTextures(1, &depthTex);
-	glBindTexture(GL_TEXTURE_2D, depthTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, displaySizeX, displaySizeY, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D, 0);
+void FrameBuffer::AttachTextures()
+{
+	glDeleteFramebuffers(1, &handle);
 
-	//Frame buffer
 	glGenFramebuffers(1, &handle);
 	glBindFramebuffer(GL_FRAMEBUFFER, handle);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, albedoTex, 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, normalsTex, 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, worldPosTex, 0);
-	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTex, 0);
+	
+	int textureCount = textures.size();
+	for (int i = 0; i < textureCount; ++i)
+	{
+		if (textures[i].format == GL_DEPTH_COMPONENT)
+		{
+			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, textures[i].handle, 0);
+		}
+		else
+		{
+			glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, textures[i].handle, 0);
+		}
+	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

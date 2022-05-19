@@ -365,7 +365,20 @@ void InitResources(App* app)
 	app->materialUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 	app->globalUniformBuffer = CreateBuffer(maxUniformBufferSize, uniformAlignment, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 
-	app->framebuffer.Regenerate(app->displaySize.x, app->displaySize.y);
+	//Generate framebuffer
+	//Albedo
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+	//Normals
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
+
+	//World Pos
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
+
+	//Depth
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT);
+
+	app->framebuffer.AttachTextures();
 }
 
 
@@ -1092,19 +1105,19 @@ void RenderScene(App* app)
 	// - bind the texture into unit 0
 	glUniform1i(app->albedoTexture, 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, app->framebuffer.albedoTex);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[0].handle);
 
 	glUniform1i(app->normalsTexture, 1);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, app->framebuffer.normalsTex);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[1].handle);
 
 	glUniform1i(app->worldPositionTexture, 2);
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, app->framebuffer.worldPosTex);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[2].handle);
 
 	glUniform1i(app->depthTexture, 3);
 	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, app->framebuffer.depthTex);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[3].handle);
 
 	glUniform1i(app->drawModeUniform, (int)app->drawMode);
 

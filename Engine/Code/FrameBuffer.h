@@ -1,6 +1,19 @@
 #pragma once
 #include "platform.h"
 
+struct TexObj
+{
+	TexObj(u32 handle, float sizeX, float sizeY, int internalFormat, int format, int type);
+
+	u32 handle;
+	float sizeX;
+	float sizeY;
+	int internalFormat;
+	int format;
+	int type;
+};
+
+
 struct FrameBuffer
 {
 public:
@@ -8,13 +21,12 @@ public:
 	~FrameBuffer();
 
 	void Regenerate(float displaySizeX, float displaySizeY);
+	void PushTexture(float sizeX, float sizeY, int internalFormat, int format, int type);
+	void AttachTextures();
 	void CheckStatus();
 
 public:
 	u32 handle;
 	
-	u32 albedoTex;
-	u32 normalsTex;
-	u32 worldPosTex;
-	u32 depthTex;
+	std::vector<TexObj> textures;
 };
