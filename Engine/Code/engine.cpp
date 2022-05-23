@@ -349,7 +349,7 @@ void InitScene(App* app)
 		app->entities[0].position = glm::vec3(0.0f, 1.9f, 0.6f);
 	}
 
-	LoadModel(app, "Room/Room #1.obj", true);
+	LoadModel(app, "Room/Room.obj", true);
 	app->sphereModel = LoadModel(app, "DefaultShapes/Sphere.fbx");
 	app->planeModel = LoadPlane(app);
 
@@ -357,19 +357,6 @@ void InitScene(App* app)
 	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-3.f, 4.f, 3.f)));
 	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(3.f, 4.f, -3.f)));
 	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-3.f, 4.f, -3.f)));
-
-	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(12.f, 4.f, 8.f)));
-	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-12.f, 4.f, 8.f)));
-	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(12.f, 4.f, -8.f)));
-	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-12.f, 4.f, -8.f)));
-	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(10.f, 4.f, 10.f)));
-	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-10.f, 4.f, 10.f)));
-	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(10.f, 4.f, -10.f)));
-	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(-10.f, 4.f, -10.f)));
-
-
-	app->lights.push_back(Light(LIGHT_TYPE::DIRECTIONAL, glm::vec3(0.5, 0.2, 0.2), glm::vec3(0.0, 1.0, 0.5), glm::vec3(0.f, 0.f, 0.f)));
-	app->lights.push_back(Light(LIGHT_TYPE::DIRECTIONAL, glm::vec3(0.5, 0.2, 0.2), glm::vec3(0.5, 1.0, 0.0), glm::vec3(0.f, 0.f, 0.f)));
 }
 
 
@@ -517,6 +504,7 @@ void DrawInfoGui(App* app)
 	}
 }
 
+
 void DrawModelListGui(App* app)
 {
 	if (ImGui::CollapsingHeader("Model list", ImGuiTreeNodeFlags_None))
@@ -600,25 +588,49 @@ void DrawEntityGui(App* app)
 					ImGui::Spacing();	ImGui::Separator();		ImGui::Spacing();
 
 					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Albedo texture");
-					ImGui::Image((ImTextureID)app->textures[mat.albedoTextureIdx].handle, textureSize);
+
+					if (mat.albedoTextureIdx != UINT32_MAX)
+						ImGui::Image((ImTextureID)app->textures[mat.albedoTextureIdx].handle, textureSize);
+
+					else
+						ImGui::Text("No texture");
 
 					ImGui::Spacing();	ImGui::Separator();		ImGui::Spacing();
 
 					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Emissive texture");
-					ImGui::Image((ImTextureID)app->textures[mat.emissiveTextureIdx].handle, textureSize);
+
+					if (mat.emissiveTextureIdx != UINT32_MAX)
+						ImGui::Image((ImTextureID)app->textures[mat.emissiveTextureIdx].handle, textureSize);
+
+					else
+						ImGui::Text("No texture");
 
 					ImGui::Spacing();	ImGui::Separator();		ImGui::Spacing();
 
 					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Specular texture");
-					ImGui::Image((ImTextureID)app->textures[mat.specularTextureIdx].handle, textureSize);
+
+					if (mat.specularTextureIdx != UINT32_MAX)
+						ImGui::Image((ImTextureID)app->textures[mat.specularTextureIdx].handle, textureSize);
+
+					else
+						ImGui::Text("No texture");
 
 					ImGui::Spacing();	ImGui::Separator();		ImGui::Spacing();
 
 					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Normals texture");
-					ImGui::Image((ImTextureID)app->textures[mat.normalsTextureIdx].handle, textureSize);
+
+					if (mat.normalsTextureIdx != UINT32_MAX)
+						ImGui::Image((ImTextureID)app->textures[mat.normalsTextureIdx].handle, textureSize);
+					
+					else
+						ImGui::Text("No texture");
 
 					ImGui::TextColored(ImVec4(0.4, 1.0, 0.4, 1.0), "Bump texture");
-					ImGui::Image((ImTextureID)app->textures[mat.bumpTextureIdx].handle, textureSize);
+					if (mat.bumpTextureIdx != UINT32_MAX)
+						ImGui::Image((ImTextureID)app->textures[mat.bumpTextureIdx].handle, textureSize);
+
+					else
+						ImGui::Text("No texture");
 
 					ImGui::Spacing();	ImGui::Spacing();
 					ImGui::PopID();
