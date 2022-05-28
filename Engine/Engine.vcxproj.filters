@@ -148,5 +148,14 @@
     <None Include="WorkingDir\lightPass.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="WorkingDir\BloomPass.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\BloomBlurrPass.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\BrightPixelDetection.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

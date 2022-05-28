@@ -91,6 +91,28 @@ void FrameBuffer::AttachTextures()
 }
 
 
+void FrameBuffer::Create()
+{
+	glGenFramebuffers(1, &handle);
+}
+
+
+void FrameBuffer::PushColorAttachment(int attachment, u32 texture, int LOD)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, handle);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachment, texture, LOD);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void FrameBuffer::ClearColorAttachments()
+{
+	glDeleteFramebuffers(1, &handle);
+}
+
+
 void FrameBuffer::CheckStatus()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, handle);

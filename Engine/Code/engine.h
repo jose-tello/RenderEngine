@@ -156,6 +156,20 @@ struct App
     u32 planeModel;
 
     FrameBuffer framebuffer;
+
+    //Bloom
+    u32 brightPixelProgramIdx;
+    u32 bloomBlurrProgramIdx;
+    u32 bloomProgramIdx;
+
+    GLuint rtBright = 0;
+    GLuint rtBloom = 0;
+
+    FrameBuffer fboBloom1;
+    FrameBuffer fboBloom2;
+    FrameBuffer fboBloom3;
+    FrameBuffer fboBloom4;
+    FrameBuffer fboBloom5;
 };
 
 u32 CreateProgram(App* app, const char* filepath, const char* programName);
@@ -177,7 +191,8 @@ void InitScene(App* app);
 void InitUniformBuffers(App* app);
 void InitFramebuffer(App* app);
 
-void InitBloomTextures(App* app);
+void InitBloomResources(App* app);
+void InitBloomPrograms(App* app);
 
 
 
@@ -210,6 +225,7 @@ u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 void RenderModels(App* app);
 void DebugDrawLights(App* app);
 void LightPass(App* app);
+void BrightPixelPass(App* app);
 void RenderScene(App* app);
 
 //Error callback

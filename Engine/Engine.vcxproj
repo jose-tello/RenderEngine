@@ -59,6 +59,9 @@
     <ClInclude Include="ThirdParty\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="WorkingDir\BloomBlurrPass.glsl" />
+    <None Include="WorkingDir\BloomPass.glsl" />
+    <None Include="WorkingDir\BrightPixelDetection.glsl" />
     <None Include="WorkingDir\lightPass.glsl" />
     <None Include="WorkingDir\shaders.glsl" />
     <None Include="WorkingDir\texturedQuad.glsl" />

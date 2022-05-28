@@ -20,9 +20,16 @@ public:
 	FrameBuffer();
 	~FrameBuffer();
 
+	//Render fbo
 	void Regenerate(float displaySizeX, float displaySizeY);
 	void PushTexture(float sizeX, float sizeY, int internalFormat, int format, int type);
 	void AttachTextures();
+
+	//General fbos
+	void Create();
+	void PushColorAttachment(int attachment, u32 texture, int LOD);
+	void ClearColorAttachments();
+
 	void CheckStatus();
 
 public:

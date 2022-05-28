@@ -244,6 +244,8 @@ void Init(App* app)
 	InitScene(app);
 	InitUniformBuffers(app);
 	InitFramebuffer(app);
+	InitBloomResources(app);
+	InitBloomPrograms(app);
 
 	if (GLVersion.major > 4 ||  (GLVersion.major == 4 && GLVersion.minor >= 3))
 	{
@@ -349,7 +351,7 @@ void InitScene(App* app)
 		app->entities[0].position = glm::vec3(0.0f, 1.9f, 0.6f);
 	}
 
-	LoadModel(app, "Room/Room.obj", true);
+	LoadModel(app, "Room/Room #1.obj", true);
 	app->sphereModel = LoadModel(app, "DefaultShapes/Sphere.fbx");
 	app->planeModel = LoadPlane(app);
 
@@ -396,6 +398,97 @@ void InitFramebuffer(App* app)
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT);
 
 	app->framebuffer.AttachTextures();
+}
+
+
+void InitBloomResources(App* app)
+{
+	app->fboBloom1.ClearColorAttachments();
+	app->fboBloom2.ClearColorAttachments();
+	app->fboBloom3.ClearColorAttachments();
+	app->fboBloom4.ClearColorAttachments();
+	app->fboBloom5.ClearColorAttachments();
+
+	//Bright mipmap
+	if (app->rtBright != 0)
+		glDeleteTextures(1, &app->rtBright);
+
+	glGenTextures(1, &app->rtBright);
+	glBindTexture(GL_TEXTURE_2D, app->rtBright);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 2,  app->displaySize.y / 2,  0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 4,  app->displaySize.y / 4,  0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 8,  app->displaySize.y / 8,  0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 16, app->displaySize.y / 16, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 32, app->displaySize.y / 32, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	//Bloom mipmap
+	if (app->rtBloom != 0)
+		glDeleteTextures(1, &app->rtBloom);
+
+	glGenTextures(1, &app->rtBloom);
+	glBindTexture(GL_TEXTURE_2D, app->rtBloom);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 2, app->displaySize.y / 2, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 4, app->displaySize.y / 4, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 8, app->displaySize.y / 8, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 16, app->displaySize.y / 16, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 32, app->displaySize.y / 32, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	//FBO 1
+	app->fboBloom1.Create();
+	app->fboBloom1.PushColorAttachment(0, app->rtBright, 0);
+	app->fboBloom1.PushColorAttachment(1, app->rtBloom, 0);
+	app->fboBloom1.CheckStatus();
+
+
+	//FBO 2
+	app->fboBloom2.Create();
+	app->fboBloom2.PushColorAttachment(0, app->rtBright, 1);
+	app->fboBloom2.PushColorAttachment(1, app->rtBloom, 1);
+	app->fboBloom2.CheckStatus();
+
+
+	//FBO 3
+	app->fboBloom3.Create();
+	app->fboBloom3.PushColorAttachment(0, app->rtBright, 2);
+	app->fboBloom3.PushColorAttachment(1, app->rtBloom, 2);
+	app->fboBloom3.CheckStatus();
+
+	//FBO 4
+	app->fboBloom4.Create();
+	app->fboBloom4.PushColorAttachment(0, app->rtBright, 3);
+	app->fboBloom4.PushColorAttachment(1, app->rtBloom, 3);
+	app->fboBloom4.CheckStatus();
+
+	//FBO 5
+	app->fboBloom5.Create();
+	app->fboBloom5.PushColorAttachment(0, app->rtBright, 4);
+	app->fboBloom5.PushColorAttachment(1, app->rtBloom, 4);
+	app->fboBloom5.CheckStatus();
+}
+
+
+void InitBloomPrograms(App* app)
+{
+	app->brightPixelProgramIdx = app->lightProgramIdx = CreateProgram(app, "BrightPixelDetection.glsl", "BRIGHT_DETECTION");
 }
 
 
@@ -924,7 +1017,8 @@ void Render(App* app)
 			DebugDrawLights(app);
 
 		LightPass(app);
-		RenderScene(app);
+		BrightPixelPass(app);
+		//RenderScene(app);
 	}
 	break;
 
@@ -1175,6 +1269,51 @@ void LightPass(App* app)
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void BrightPixelPass(App* app)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom1.handle);
+
+	//u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
+	//glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+
+	glClearColor(0.1, 0.1, 0.1, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glDisable(GL_DEPTH_TEST);
+
+	// - set the viewport
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+	// - bind program
+	Program program = app->programs[app->brightPixelProgramIdx];
+	glUseProgram(program.handle);
+	glBindVertexArray(app->vao);
+
+	GLuint alb = glGetUniformLocation(program.handle, "albedoTexture");
+
+	// - bind the texture into unit 0
+	glUniform1i(alb, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[0].handle);
+
+
+	GLuint uniformLoc = glGetUniformLocation(program.handle, "threshold");
+	glUniform1f(uniformLoc, 0.8f);
+
+	// - draw
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);
