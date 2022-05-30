@@ -1300,7 +1300,7 @@ void BloomPass(App* app)
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 
-	//BlurrBloomPass(app);
+	BlurrBloomPass(app);
 
 }
 
@@ -1371,6 +1371,7 @@ void RenderScene(App* app)
 
 void BrightPixelPass(App* app)
 {
+
 	app->fboBloom1.CheckStatus();
 	glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom1.handle);
 
@@ -1379,6 +1380,7 @@ void BrightPixelPass(App* app)
 
 	// - set the viewport
 	glViewport(0, 0, app->displaySize.x * 0.5, app->displaySize.y * 0.5);
+	glDisable(GL_DEPTH_TEST);
 
 	// - bind program
 	Program program = app->programs[app->brightPixelProgramIdx];
@@ -1434,11 +1436,12 @@ void Blurr(App* app, FrameBuffer& fbo, int texSizeX, int texSizeY, int attachmen
 {
 	glDisable(GL_DEPTH_TEST);
 	
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo.handle);
+	
 	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0 + attachment };
 	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 	glViewport(0, 0, texSizeX, texSizeY);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo.handle);
 
 	Program program = app->programs[app->bloomBlurrProgramIdx];
 	glUseProgram(program.handle);
