@@ -32,6 +32,7 @@ enum class DRAW_MODE : int
     ALBEDO,
     NORMALS,
     WORLD_POS,
+    BLOOM,
     DEPTH,
     MAX
 };
@@ -144,6 +145,7 @@ struct App
     GLuint normalsTexture;
     GLuint worldPositionTexture;
     GLuint defaultTexture;
+    GLuint bloomTexure;
     GLuint depthTexture;
     GLuint drawModeUniform;
 

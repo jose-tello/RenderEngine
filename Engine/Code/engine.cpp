@@ -321,6 +321,7 @@ void InitPrograms(App* app)
 	app->normalsTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "normals");
 	app->worldPositionTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "worldPos");
 	app->defaultTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "defaultTexture");
+	app->bloomTexure = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "bloom");
 	app->depthTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "depth");
 	app->drawModeUniform = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "drawMode");
 
@@ -392,6 +393,9 @@ void InitFramebuffer(App* app)
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
 
 	//Default
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
+
+	//Bloom
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
 	
 	//Depth
@@ -500,6 +504,7 @@ void InitBloomPrograms(App* app)
 {
 	app->brightPixelProgramIdx = CreateProgram(app, "BrightPixelDetection.glsl", "BRIGHT_DETECTION");
 	app->bloomBlurrProgramIdx = CreateProgram(app, "BloomBlurrPass.glsl", "BLURR_BLOOM");
+	app->bloomProgramIdx = CreateProgram(app, "BloomPass.glsl", "BLOOM_PASS");
 }
 
 
@@ -558,6 +563,9 @@ void DrawModeGui(App* app)
 
 		if (ImGui::MenuItem("World position"))
 			app->drawMode = DRAW_MODE::WORLD_POS;
+
+		if (ImGui::MenuItem("Bloom"))
+			app->drawMode = DRAW_MODE::BLOOM;
 
 		if (ImGui::MenuItem("Depth"))
 			app->drawMode = DRAW_MODE::DEPTH;
@@ -1299,9 +1307,9 @@ void BloomPass(App* app)
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-
 	BlurrBloomPass(app);
 
+	ApplyBloomPass(app);
 }
 
 
@@ -1333,15 +1341,19 @@ void RenderScene(App* app)
 
 	glUniform1i(app->worldPositionTexture, 2);
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, app->rtBright);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[2].handle);
 
 	glUniform1i(app->defaultTexture, 3);
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[3].handle);
 
-	glUniform1i(app->depthTexture, 4);
+	glUniform1i(app->bloomTexure, 4);
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[4].handle);
+
+	glUniform1i(app->depthTexture, 5);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[5].handle);
 
 	glUniform1i(app->drawModeUniform, (int)app->drawMode);
 
@@ -1397,7 +1409,7 @@ void BrightPixelPass(App* app)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	GLuint uniformLoc = glGetUniformLocation(program.handle, "threshold");
-	glUniform1f(uniformLoc, 0.8f);
+	glUniform1f(uniformLoc, 0.9f);
 
 	// - draw
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -1442,7 +1454,6 @@ void Blurr(App* app, FrameBuffer& fbo, int texSizeX, int texSizeY, int attachmen
 	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 	glViewport(0, 0, texSizeX, texSizeY);
 
-
 	Program program = app->programs[app->bloomBlurrProgramIdx];
 	glUseProgram(program.handle);
 
@@ -1460,6 +1471,58 @@ void Blurr(App* app, FrameBuffer& fbo, int texSizeX, int texSizeY, int attachmen
 	glUniform1i(uniformLoc, LOD);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void ApplyBloomPass(App* app)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
+
+	u32 drawBuffers[] = {GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+
+	// - set the viewport
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+	// - bind program
+	Program program = app->programs[app->bloomProgramIdx];
+	glUseProgram(program.handle);
+	glBindVertexArray(app->vao);
+
+	GLuint uniformLocation = glGetUniformLocation(program.handle, "bloomMap");
+
+	// - bind the texture into unit 0
+	glUniform1i(uniformLocation, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, app->rtBright);
+
+	uniformLocation = glGetUniformLocation(program.handle, "colorMap");
+
+	// - bind the texture into unit 0
+	glUniform1i(uniformLocation, 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[3].handle);
+
+	uniformLocation = glGetUniformLocation(program.handle, "maxLod");
+	glUniform1i(uniformLocation, 4);
+
+	// - draw
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	// - clean
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);

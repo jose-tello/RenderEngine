@@ -24,6 +24,7 @@ uniform sampler2D albedo;
 uniform sampler2D normals;
 uniform sampler2D worldPos;
 uniform sampler2D depth;
+uniform sampler2D bloom;
 uniform sampler2D defaultTexture;
 
 layout (location = 0) out vec4 color;
@@ -44,6 +45,9 @@ void main()
 		color = texture(worldPos, vTexCoord);
 
 	else if (drawMode == 4)
+		color = texture(bloom, vTexCoord);
+
+	else if (drawMode == 5)
 	{
 		float depthValue = texture(depth, vTexCoord).x;
 		color = vec4(depthValue.xxx, 1.0);
