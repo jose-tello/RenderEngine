@@ -383,7 +383,7 @@ void InitFramebuffer(App* app)
 {
 	//Generate framebuffer
 	//Albedo
-	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
 
 	//Normals
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
@@ -423,10 +423,10 @@ void InitBloomResources(App* app)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 2,  app->displaySize.y / 2,  0, GL_RGBA, GL_FLOAT, nullptr);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 4,  app->displaySize.y / 4,  0, GL_RGBA, GL_FLOAT, nullptr);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 8,  app->displaySize.y / 8,  0, GL_RGBA, GL_FLOAT, nullptr);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 16, app->displaySize.y / 16, 0, GL_RGBA, GL_FLOAT, nullptr);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 32, app->displaySize.y / 32, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, app->displaySize.x / 4,  app->displaySize.y / 4,  0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA16F, app->displaySize.x / 8,  app->displaySize.y / 8,  0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 3, GL_RGBA16F, app->displaySize.x / 16, app->displaySize.y / 16, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 4, GL_RGBA16F, app->displaySize.x / 32, app->displaySize.y / 32, 0, GL_RGBA, GL_FLOAT, nullptr);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	//Bloom mipmap
@@ -443,10 +443,10 @@ void InitBloomResources(App* app)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 2, app->displaySize.y / 2, 0, GL_RGBA, GL_FLOAT, nullptr);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 4, app->displaySize.y / 4, 0, GL_RGBA, GL_FLOAT, nullptr);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 8, app->displaySize.y / 8, 0, GL_RGBA, GL_FLOAT, nullptr);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 16, app->displaySize.y / 16, 0, GL_RGBA, GL_FLOAT, nullptr);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, app->displaySize.x / 32, app->displaySize.y / 32, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, app->displaySize.x / 4, app->displaySize.y / 4, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA16F, app->displaySize.x / 8, app->displaySize.y / 8, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 3, GL_RGBA16F, app->displaySize.x / 16, app->displaySize.y / 16, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 4, GL_RGBA16F, app->displaySize.x / 32, app->displaySize.y / 32, 0, GL_RGBA, GL_FLOAT, nullptr);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 
@@ -454,41 +454,52 @@ void InitBloomResources(App* app)
 
 	//FBO 1
 	app->fboBloom1.Create();
+	app->fboBloom1.Bind();
 	app->fboBloom1.PushColorAttachment(0, app->rtBright, 0);
 	app->fboBloom1.PushColorAttachment(1, app->rtBloom, 0);
+	app->fboBloom1.Unbind();
 	app->fboBloom1.CheckStatus();
 
 
 	//FBO 2
 	app->fboBloom2.Create();
+	app->fboBloom2.Bind();
 	app->fboBloom2.PushColorAttachment(0, app->rtBright, 1);
 	app->fboBloom2.PushColorAttachment(1, app->rtBloom, 1);
+	app->fboBloom2.Unbind();
 	app->fboBloom2.CheckStatus();
 
 
 	//FBO 3
 	app->fboBloom3.Create();
+	app->fboBloom3.Bind();
 	app->fboBloom3.PushColorAttachment(0, app->rtBright, 2);
 	app->fboBloom3.PushColorAttachment(1, app->rtBloom, 2);
+	app->fboBloom3.Unbind();
 	app->fboBloom3.CheckStatus();
 
 	//FBO 4
 	app->fboBloom4.Create();
+	app->fboBloom4.Bind();
 	app->fboBloom4.PushColorAttachment(0, app->rtBright, 3);
 	app->fboBloom4.PushColorAttachment(1, app->rtBloom, 3);
+	app->fboBloom4.Unbind();
 	app->fboBloom4.CheckStatus();
 
 	//FBO 5
 	app->fboBloom5.Create();
+	app->fboBloom5.Bind();
 	app->fboBloom5.PushColorAttachment(0, app->rtBright, 4);
 	app->fboBloom5.PushColorAttachment(1, app->rtBloom, 4);
+	app->fboBloom5.Unbind();
 	app->fboBloom5.CheckStatus();
 }
 
 
 void InitBloomPrograms(App* app)
 {
-	app->brightPixelProgramIdx = app->lightProgramIdx = CreateProgram(app, "BrightPixelDetection.glsl", "BRIGHT_DETECTION");
+	app->brightPixelProgramIdx = CreateProgram(app, "BrightPixelDetection.glsl", "BRIGHT_DETECTION");
+	app->bloomBlurrProgramIdx = CreateProgram(app, "BloomBlurrPass.glsl", "BLURR_BLOOM");
 }
 
 
@@ -1017,8 +1028,8 @@ void Render(App* app)
 			DebugDrawLights(app);
 
 		LightPass(app);
-		BrightPixelPass(app);
-		//RenderScene(app);
+		BloomPass(app);
+		RenderScene(app);
 	}
 	break;
 
@@ -1280,48 +1291,17 @@ void LightPass(App* app)
 }
 
 
-void BrightPixelPass(App* app)
+void BloomPass(App* app)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom1.handle);
+	BrightPixelPass(app);
+	glBindTexture(GL_TEXTURE_2D, app->rtBright);
+	glGenerateMipmap(GL_TEXTURE_2D);
 
-	//u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
-	//glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
-
-	glClearColor(0.1, 0.1, 0.1, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glDisable(GL_DEPTH_TEST);
-
-	// - set the viewport
-	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-	// - bind program
-	Program program = app->programs[app->brightPixelProgramIdx];
-	glUseProgram(program.handle);
-	glBindVertexArray(app->vao);
-
-	GLuint alb = glGetUniformLocation(program.handle, "albedoTexture");
-
-	// - bind the texture into unit 0
-	glUniform1i(alb, 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[0].handle);
-
-
-	GLuint uniformLoc = glGetUniformLocation(program.handle, "threshold");
-	glUniform1f(uniformLoc, 0.8f);
-
-	// - draw
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	glBindVertexArray(0);
-	glUseProgram(0);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//BlurrBloomPass(app);
+
 }
 
 
@@ -1353,7 +1333,7 @@ void RenderScene(App* app)
 
 	glUniform1i(app->worldPositionTexture, 2);
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[2].handle);
+	glBindTexture(GL_TEXTURE_2D, app->rtBright);
 
 	glUniform1i(app->defaultTexture, 3);
 	glActiveTexture(GL_TEXTURE3);
@@ -1386,6 +1366,105 @@ void RenderScene(App* app)
 
 	glBindVertexArray(0);
 	glUseProgram(0);
+}
+
+
+void BrightPixelPass(App* app)
+{
+	app->fboBloom1.CheckStatus();
+	glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom1.handle);
+
+	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+
+	// - set the viewport
+	glViewport(0, 0, app->displaySize.x * 0.5, app->displaySize.y * 0.5);
+
+	// - bind program
+	Program program = app->programs[app->brightPixelProgramIdx];
+	glUseProgram(program.handle);
+	glBindVertexArray(app->vao);
+
+	GLuint alb = glGetUniformLocation(program.handle, "albedoTexture");
+
+	// - bind the texture into unit 0
+	glUniform1i(alb, 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[0].handle);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	GLuint uniformLoc = glGetUniformLocation(program.handle, "threshold");
+	glUniform1f(uniformLoc, 0.8f);
+
+	// - draw
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void BlurrBloomPass(App* app)
+{
+	//horizontal blurr
+	Blurr(app, app->fboBloom1, app->displaySize.x / 2,  app->displaySize.y / 2,  1, app->rtBright, 0, 1.f, 0.f);
+	Blurr(app, app->fboBloom2, app->displaySize.x / 4,  app->displaySize.y / 4,  1, app->rtBright, 1, 1.f, 0.f);
+	Blurr(app, app->fboBloom3, app->displaySize.x / 8,  app->displaySize.y / 8,  1, app->rtBright, 2, 1.f, 0.f);
+	Blurr(app, app->fboBloom4, app->displaySize.x / 16, app->displaySize.y / 16, 1, app->rtBright, 3, 1.f, 0.f);
+	Blurr(app, app->fboBloom5, app->displaySize.x / 32, app->displaySize.y / 32, 1, app->rtBright, 4, 1.f, 0.f);
+
+	//Vertical blurr
+	Blurr(app, app->fboBloom1, app->displaySize.x / 2,  app->displaySize.y / 2,  0, app->rtBloom, 0, 0.f, 1.f);
+	Blurr(app, app->fboBloom2, app->displaySize.x / 4,  app->displaySize.y / 4,  0, app->rtBloom, 1, 0.f, 1.f);
+	Blurr(app, app->fboBloom3, app->displaySize.x / 8,  app->displaySize.y / 8,  0, app->rtBloom, 2, 0.f, 1.f);
+	Blurr(app, app->fboBloom4, app->displaySize.x / 16, app->displaySize.y / 16, 0, app->rtBloom, 3, 0.f, 1.f);
+	Blurr(app, app->fboBloom5, app->displaySize.x / 32, app->displaySize.y / 32, 0, app->rtBloom, 4, 0.f, 1.f);
+}
+
+
+void Blurr(App* app, FrameBuffer& fbo, int texSizeX, int texSizeY, int attachment, u32 texture, int LOD, float directionX, float directionY)
+{
+	glDisable(GL_DEPTH_TEST);
+	
+	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0 + attachment };
+	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+	glViewport(0, 0, texSizeX, texSizeY);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo.handle);
+
+	Program program = app->programs[app->bloomBlurrProgramIdx];
+	glUseProgram(program.handle);
+
+	glBindVertexArray(app->vao);
+	
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	u32 uniformLoc = glGetUniformLocation(program.handle, "colorMap");
+	glUniform1i(uniformLoc, 0);
+
+	uniformLoc = glGetUniformLocation(program.handle, "direction");
+	glUniform2f(uniformLoc, directionX, directionY);
+
+	uniformLoc = glGetUniformLocation(program.handle, "inputLod");
+	glUniform1i(uniformLoc, LOD);
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 

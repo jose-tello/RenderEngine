@@ -225,8 +225,14 @@ u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 void RenderModels(App* app);
 void DebugDrawLights(App* app);
 void LightPass(App* app);
-void BrightPixelPass(App* app);
+void BloomPass(App* app);
 void RenderScene(App* app);
+
+//Bloom
+void BrightPixelPass(App* app);
+void BlurrBloomPass(App* app);
+void Blurr(App* app, FrameBuffer& fbo, int texSizeX, int texSizeY, int attachment, u32 texture, int LOD, float directionX, float directionY);
+void ApplyBloomPass(App* app);
 
 //Error callback
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* useParam);

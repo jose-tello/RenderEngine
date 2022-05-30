@@ -21,7 +21,7 @@ in vec2 vTexCoord;
 uniform sampler2D albedoTexture;
 uniform float threshold;
 
-layout (location = 0) out vec4 color;
+out vec4 color;
 
 
 void main()

@@ -27,7 +27,9 @@ public:
 
 	//General fbos
 	void Create();
+	void Bind();
 	void PushColorAttachment(int attachment, u32 texture, int LOD);
+	void Unbind();
 	void ClearColorAttachments();
 
 	void CheckStatus();
