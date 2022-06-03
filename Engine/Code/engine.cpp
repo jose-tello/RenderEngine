@@ -246,6 +246,7 @@ void Init(App* app)
 	InitFramebuffer(app);
 	InitBloomResources(app);
 	InitBloomPrograms(app);
+	InitCubemap(app);
 
 	if (GLVersion.major > 4 ||  (GLVersion.major == 4 && GLVersion.minor >= 3))
 	{
@@ -505,6 +506,26 @@ void InitBloomPrograms(App* app)
 	app->brightPixelProgramIdx = CreateProgram(app, "BrightPixelDetection.glsl", "BRIGHT_DETECTION");
 	app->bloomBlurrProgramIdx = CreateProgram(app, "BloomBlurrPass.glsl", "BLURR_BLOOM");
 	app->bloomProgramIdx = CreateProgram(app, "BloomPass.glsl", "BLOOM_PASS");
+}
+
+
+void InitCubemap(App* app)
+{
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+	glGenTextures(1, &app->skyboxTexture);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, app->skyboxTexture);
+
+	for (u32 i = 0; i < 6; ++i)
+	{
+		//glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, resolution, resolution, 0, GL_RGB, GL_UNSIGNED_BYTE, facePixels[i]);
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 

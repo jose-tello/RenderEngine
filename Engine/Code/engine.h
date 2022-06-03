@@ -179,7 +179,11 @@ struct App
     float bloomIntensity3 = 0.9f;
     float bloomIntensity4 = 0.9f;
     float bloomIntensity5 = 0.9f;
+
+    //Skybox
+    u32 skyboxTexture;
 };
+
 
 u32 CreateProgram(App* app, const char* filepath, const char* programName);
 u32 LoadProgram(App* app, const char* filepath, const char* programName);
@@ -203,7 +207,7 @@ void InitFramebuffer(App* app);
 void InitBloomResources(App* app);
 void InitBloomPrograms(App* app);
 
-
+void InitCubemap(App* app);
 
 //GUI------------------------------------------------------------------
 void Gui(App* app);
