@@ -543,6 +543,12 @@ void Gui(App* app)
 
 	DrawLightGui(app);
 
+	ImGui::NewLine();
+	ImGui::Separator();
+	ImGui::NewLine();
+
+	DrawBloomGui(app);
+
 	DrawEntityGui(app);
 	
 	ImGui::End();
@@ -865,6 +871,27 @@ void DrawLightGui(App* app)
 }
 
 
+void DrawBloomGui(App* app)
+{
+	if (ImGui::CollapsingHeader("Bloom", ImGuiTreeNodeFlags_None))
+	{
+		ImGui::NewLine();
+		
+		ImGui::Checkbox("Apply bloom", &app->applyBloom);
+
+		ImGui::NewLine();
+
+		ImGui::SliderFloat("LOD 1 intensity:", &app->bloomIntensity1, 0.0f, 1.0f);
+		ImGui::SliderFloat("LOD 2 intensity:", &app->bloomIntensity2, 0.0f, 1.0f);
+		ImGui::SliderFloat("LOD 3 intensity:", &app->bloomIntensity3, 0.0f, 1.0f);
+		ImGui::SliderFloat("LOD 4 intensity:", &app->bloomIntensity4, 0.0f, 1.0f);
+		ImGui::SliderFloat("LOD 5 intensity:", &app->bloomIntensity5, 0.0f, 1.0f);
+
+		ImGui::NewLine();
+	}
+}
+
+
 //Update----------------------------------------------------------------------------
 void Update(App* app)
 {
@@ -1036,7 +1063,10 @@ void Render(App* app)
 			DebugDrawLights(app);
 
 		LightPass(app);
-		BloomPass(app);
+
+		if (app->applyBloom == true)
+			BloomPass(app);
+
 		RenderScene(app);
 	}
 	break;
@@ -1243,9 +1273,6 @@ void LightPass(App* app)
 
 	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT3 };
 	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
-
-	glClearColor(0.1, 0.1, 0.1, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	glDisable(GL_DEPTH_TEST);
 
@@ -1516,6 +1543,21 @@ void ApplyBloomPass(App* app)
 
 	uniformLocation = glGetUniformLocation(program.handle, "maxLod");
 	glUniform1i(uniformLocation, 4);
+
+	uniformLocation = glGetUniformLocation(program.handle, "lodIntensity[0]");
+	glUniform1f(uniformLocation, app->bloomIntensity1);	
+	
+	uniformLocation = glGetUniformLocation(program.handle, "lodIntensity[1]");
+	glUniform1f(uniformLocation, app->bloomIntensity2);	
+	
+	uniformLocation = glGetUniformLocation(program.handle, "lodIntensity[2]");
+	glUniform1f(uniformLocation, app->bloomIntensity3);	
+	
+	uniformLocation = glGetUniformLocation(program.handle, "lodIntensity[3]");
+	glUniform1f(uniformLocation, app->bloomIntensity4);	
+	
+	uniformLocation = glGetUniformLocation(program.handle, "lodIntensity[4]");
+	glUniform1f(uniformLocation, app->bloomIntensity5);
 
 	// - draw
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

@@ -172,6 +172,13 @@ struct App
     FrameBuffer fboBloom3;
     FrameBuffer fboBloom4;
     FrameBuffer fboBloom5;
+
+    bool applyBloom = true;
+    float bloomIntensity1 = 0.9f;
+    float bloomIntensity2 = 0.9f;
+    float bloomIntensity3 = 0.9f;
+    float bloomIntensity4 = 0.9f;
+    float bloomIntensity5 = 0.9f;
 };
 
 u32 CreateProgram(App* app, const char* filepath, const char* programName);
@@ -208,6 +215,7 @@ void DrawEntityListGui(App* app);
 void DrawEntityGui(App* app);
 void DrawCameraGui(App* app);
 void DrawLightGui(App* app);
+void DrawBloomGui(App* app);
 
 //Update---------------------------------------------------------------
 void Update(App* app);

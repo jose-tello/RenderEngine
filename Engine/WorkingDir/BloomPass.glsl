@@ -22,6 +22,8 @@ uniform sampler2D bloomMap;
 uniform sampler2D colorMap;
 uniform int maxLod;
 
+uniform float lodIntensity[5];
+
 layout (location = 0) out vec4 color;
 layout (location = 1) out vec4 bloomColor;
 
@@ -30,7 +32,7 @@ void main()
 	bloomColor = vec4(0.0);
 	for(int i = 0; i < maxLod; ++i)
 	{
-		bloomColor += textureLod(bloomMap, vTexCoord, float(i));
+		bloomColor += textureLod(bloomMap, vTexCoord, float(i)) * lodIntensity[i];
 	}
 
 	color = vec4(bloomColor.rgb + texture(colorMap, vTexCoord).rgb, 1.0);
