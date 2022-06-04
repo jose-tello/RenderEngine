@@ -388,7 +388,7 @@ void InitFramebuffer(App* app)
 {
 	//Generate framebuffer
 	//Albedo
-	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_FLOAT);
 
 	//Normals
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
@@ -397,7 +397,7 @@ void InitFramebuffer(App* app)
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
 
 	//Default
-	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_FLOAT);
 
 	//Bloom
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
@@ -1072,9 +1072,9 @@ void Render(App* app)
 		if (app->debugDrawLights == true)
 			DebugDrawLights(app);
 
+		app->skybox->RenderSkybox(app);
 		LightPass(app);
 
-		app->skybox->RenderSkybox(app);
 
 		if (app->applyBloom == true)
 			BloomPass(app);
