@@ -17,6 +17,7 @@
 #define MAX_GO_NAME_LENGTH 100
 
 struct Light;
+struct Environment;
 
 const float rectVertices[] = {-1.0, -1.0, 0.0, 0.0, 0.0,
                            1.0, -1.0, 0.0, 1.0, 0.0,
@@ -37,29 +38,6 @@ enum class DRAW_MODE : int
     MAX
 };
 
-struct Image
-{
-    void* pixels;
-    glm::ivec2 size;
-    i32   nchannels;
-    i32   stride;
-};
-
-struct Texture
-{
-    GLuint      handle;
-    std::string filepath;
-};
-
-struct Program
-{
-    GLuint             handle;
-    std::string        filepath;
-    std::string        programName;
-    u64                lastWriteTimestamp; // What is this for?
-
-    VertexShaderLayout layout;
-};
 
 enum Mode
 {
@@ -181,15 +159,18 @@ struct App
     float bloomIntensity5 = 0.9f;
 
     //Skybox
-    u32 skyboxTexture;
+    Environment* skybox = nullptr;
 };
 
 
 u32 CreateProgram(App* app, const char* filepath, const char* programName);
 u32 LoadProgram(App* app, const char* filepath, const char* programName);
 
+Image LoadImage(const char* filename);
+void FreeImage(Image image);
 
-GLuint CreateTexture2DFromImage(Image image);
+u32 CreateTexture2DFromImage(Image image);
+
 u32 LoadTexture2D(App* app, const char* filepath);
 
 //Init-----------------------------------------------------------------

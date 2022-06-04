@@ -105,3 +105,36 @@ struct Material
 	u32 localParamsOffset = 0;
 	u32 localParamsSize = 0;
 };
+
+
+struct Image
+{
+	void* pixels;
+	glm::ivec2 size;
+	i32   nchannels;
+	i32   stride;
+};
+
+struct Texture
+{
+	u32      handle;
+	std::string filepath;
+};
+
+
+struct TextureCubeMap
+{
+	u32 handle;
+	Texture textureArray[6];
+};
+
+
+struct Program
+{
+	u32				   handle;
+	std::string        filepath;
+	std::string        programName;
+	u64                lastWriteTimestamp;
+
+	VertexShaderLayout layout;
+};

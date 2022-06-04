@@ -7,6 +7,7 @@
 
 #include "engine.h"
 #include "assimp_model_loading.h"
+#include "Environment.h"
 
 #include <imgui.h>
 #include <stb_image.h>
@@ -178,7 +179,7 @@ void FreeImage(Image image)
 }
 
 
-GLuint CreateTexture2DFromImage(Image image)
+u32 CreateTexture2DFromImage(Image image)
 {
 	GLenum internalFormat = GL_RGB8;
 	GLenum dataFormat = GL_RGB;
@@ -252,6 +253,8 @@ void Init(App* app)
 	{
 		glDebugMessageCallback(OnGlError, app);
 	}
+	
+	app->skybox = new Environment(app, "neon_photostudio_4k.hdr");
 
 	app->mode = Mode_Model;
 }
@@ -353,7 +356,7 @@ void InitScene(App* app)
 		app->entities[0].position = glm::vec3(0.0f, 1.9f, 0.6f);
 	}
 
-	LoadModel(app, "Room/Room #1.obj", true);
+	//LoadModel(app, "Room/Room #1.obj", true);
 	app->sphereModel = LoadModel(app, "DefaultShapes/Sphere.fbx");
 	app->planeModel = LoadPlane(app);
 
@@ -512,20 +515,6 @@ void InitBloomPrograms(App* app)
 void InitCubemap(App* app)
 {
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-
-	glGenTextures(1, &app->skyboxTexture);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, app->skyboxTexture);
-
-	for (u32 i = 0; i < 6; ++i)
-	{
-		//glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, resolution, resolution, 0, GL_RGB, GL_UNSIGNED_BYTE, facePixels[i]);
-	}
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 
@@ -1085,6 +1074,8 @@ void Render(App* app)
 
 		LightPass(app);
 
+		app->skybox->RenderSkybox(app);
+
 		if (app->applyBloom == true)
 			BloomPass(app);
 
@@ -1156,7 +1147,6 @@ u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 
 void RenderModels(App* app)
 {
-	// - clear the framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
 
 	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };

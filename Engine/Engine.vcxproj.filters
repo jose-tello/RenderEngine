@@ -78,6 +78,9 @@
     <ClCompile Include="Code\FrameBuffer.cpp">
       <Filter>Engine\Structures</Filter>
     </ClCompile>
+    <ClCompile Include="Code\Environment.cpp">
+      <Filter>Engine\Structures</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -137,6 +140,9 @@
     <ClInclude Include="Code\FrameBuffer.h">
       <Filter>Engine\Structures</Filter>
     </ClInclude>
+    <ClInclude Include="Code\Environment.h">
+      <Filter>Engine\Structures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\shaders.glsl">
@@ -155,6 +161,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="WorkingDir\BrightPixelDetection.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\hdrToCubemap.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\Skybox.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -23,6 +23,7 @@
     <ClCompile Include="Code\BufferManagement.cpp" />
     <ClCompile Include="Code\Camera.cpp" />
     <ClCompile Include="Code\engine.cpp" />
+    <ClCompile Include="Code\Environment.cpp" />
     <ClCompile Include="Code\FrameBuffer.cpp" />
     <ClCompile Include="Code\Light.cpp" />
     <ClCompile Include="Code\ModelStructures.cpp" />
@@ -42,6 +43,7 @@
     <ClInclude Include="Code\BufferManagement.h" />
     <ClInclude Include="Code\Camera.h" />
     <ClInclude Include="Code\engine.h" />
+    <ClInclude Include="Code\Environment.h" />
     <ClInclude Include="Code\FrameBuffer.h" />
     <ClInclude Include="Code\Light.h" />
     <ClInclude Include="Code\ModelStructures.h" />
@@ -62,8 +64,10 @@
     <None Include="WorkingDir\BloomBlurrPass.glsl" />
     <None Include="WorkingDir\BloomPass.glsl" />
     <None Include="WorkingDir\BrightPixelDetection.glsl" />
+    <None Include="WorkingDir\hdrToCubemap.glsl" />
     <None Include="WorkingDir\lightPass.glsl" />
     <None Include="WorkingDir\shaders.glsl" />
+    <None Include="WorkingDir\Skybox.glsl" />
     <None Include="WorkingDir\texturedQuad.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
