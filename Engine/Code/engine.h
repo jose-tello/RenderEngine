@@ -35,6 +35,7 @@ enum class DRAW_MODE : int
     WORLD_POS,
     BLOOM,
     DEPTH,
+    REFLECTIVITY,
     MAX
 };
 
@@ -125,6 +126,7 @@ struct App
     GLuint defaultTexture;
     GLuint bloomTexure;
     GLuint depthTexture;
+    GLuint reflectivityTexture;
     GLuint drawModeUniform;
 
     GLuint geometryUniformTexture;

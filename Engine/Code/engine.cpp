@@ -327,6 +327,7 @@ void InitPrograms(App* app)
 	app->defaultTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "defaultTexture");
 	app->bloomTexure = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "bloom");
 	app->depthTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "depth");
+	app->reflectivityTexture = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "reflectivity");
 	app->drawModeUniform = glGetUniformLocation(app->programs[app->screenRectProgramIdx].handle, "drawMode");
 
 	app->texturedGeometryProgramIdx = CreateProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
@@ -401,6 +402,9 @@ void InitFramebuffer(App* app)
 
 	//Bloom
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_RGBA16F, GL_RGBA, GL_UNSIGNED_BYTE);
+
+	//Reflectivity
+	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_R16F, GL_RED, GL_FLOAT);
 	
 	//Depth
 	app->framebuffer.PushTexture(app->displaySize.x, app->displaySize.y, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_FLOAT);
@@ -583,6 +587,9 @@ void DrawModeGui(App* app)
 		if (ImGui::MenuItem("Bloom"))
 			app->drawMode = DRAW_MODE::BLOOM;
 
+		if (ImGui::MenuItem("Reflectivity"))
+			app->drawMode = DRAW_MODE::REFLECTIVITY;
+
 		if (ImGui::MenuItem("Depth"))
 			app->drawMode = DRAW_MODE::DEPTH;
 
@@ -710,6 +717,8 @@ void DrawEntityGui(App* app)
 					ImGui::InputFloat3("Emissive", &mat.emissive.x, "%.1f", ImGuiInputTextFlags_AutoSelectAll);
 					ImGui::Spacing();
 					ImGui::DragFloat("Smoothness", &mat.smoothness, 0.01f, 0.0f, 100.0f);
+					ImGui::Spacing();
+					ImGui::DragFloat("Reflectivity", &mat.reflectivity, 0.005f, 0.0f, 1.0f);
 
 					ImVec2 textureSize = ImVec2(124, 124);
 
@@ -1021,12 +1030,13 @@ void FillUniformMaterialParams(App* app)
 
 		PushVec3(app->materialUniformBuffer, app->materials[i].emissive);
 
+		PushFloat(app->materialUniformBuffer, app->materials[i].reflectivity);
+
 		app->materials[i].localParamsSize = app->materialUniformBuffer.head - app->materials[i].localParamsOffset;
 	}
 
 	UnmapBuffer(app->materialUniformBuffer);
 }
-
 
 
 void FillUniformGlobalParams(App* app)
@@ -1145,14 +1155,15 @@ u32 FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 	return vaoHandle;
 }
 
+
 void RenderModels(App* app)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
 
-	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT5 };
 	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
 
-	glClearColor(0.1, 0.1, 0.1, 1.0);
+	glClearColor(0.f, 0.f, 0.f, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glEnable(GL_DEPTH_TEST);
@@ -1300,6 +1311,8 @@ void LightPass(App* app)
 	GLuint alb = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "albedo");	//TODO ask what to do about these
 	GLuint norm = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "normals");
 	GLuint pos = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "worldPos");
+	GLuint reflx = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "reflectivity");
+	GLuint skyBox = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "skyBox");
 
 	// - bind the texture into unit 0
 	glUniform1i(alb, 0);
@@ -1313,11 +1326,24 @@ void LightPass(App* app)
 	glUniform1i(pos, 2);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[2].handle);
+	
+	glUniform1i(reflx, 3);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[5].handle);
+
+	glUniform1i(skyBox, 4);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, app->skybox->cubeMap.handle);
+
+
 
 	// - draw
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	// - clean
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -1389,9 +1415,13 @@ void RenderScene(App* app)
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[4].handle);
 
-	glUniform1i(app->depthTexture, 5);
+	glUniform1i(app->reflectivityTexture, 5);
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[5].handle);
+
+	glUniform1i(app->depthTexture, 6);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, app->framebuffer.textures[6].handle);
 
 	glUniform1i(app->drawModeUniform, (int)app->drawMode);
 
@@ -1399,6 +1429,12 @@ void RenderScene(App* app)
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	// - clean
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, 0);
 

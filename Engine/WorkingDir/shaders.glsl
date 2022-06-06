@@ -38,11 +38,13 @@ layout (binding = 2, std140) uniform MaterialParams
 {
 	vec3 albedo;
 	vec3 emissive;
+	float reflectivity;
 };
 
 layout (location = 0) out vec4 color;
 layout (location = 1) out vec4 normals;
 layout (location = 2) out vec4 worldPos;
+layout (location = 3) out float reflectiveTex;
 
 
 void main()
@@ -50,6 +52,7 @@ void main()
 	color = vec4(texture(uTexture, vTexCoord).xyz * albedo, 1.0);
 	normals = vec4(normalize(vNormal), 1.0);
 	worldPos = vec4(vPosition, 1.0);
+	reflectiveTex = reflectivity;
 }
 
 #endif

@@ -94,7 +94,8 @@ struct Material
 	glm::vec3 albedo;
 	glm::vec3 emissive;
 
-	float smoothness;
+	float smoothness = 0.f;
+	float reflectivity = 0.f;
 
 	u32 albedoTextureIdx;
 	u32 emissiveTextureIdx;

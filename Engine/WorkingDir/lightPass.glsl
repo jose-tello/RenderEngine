@@ -21,6 +21,8 @@ in vec2 vTexCoord;
 uniform sampler2D albedo;
 uniform sampler2D normals;
 uniform sampler2D worldPos;
+uniform sampler2D reflectivity;
+uniform samplerCube skyBox;
 
 float specularStrength = 0.5;
 
@@ -94,13 +96,26 @@ vec3 CalculateDiffuse()
 }
 
 
+vec3 CalculateReflection()
+{
+	vec4 pos = texture(worldPos, vTexCoord);
+	vec4 normal = texture(normals, vTexCoord);
+
+	vec3 viewDir = normalize(uCameraPosition - pos.xyz);
+
+	return texture(skyBox, reflect(-viewDir, normal.xyz)).rgb;
+}
+
+
 void main()
 {
 
 	vec3 ambient = CalculateAmbientLight();
 	vec3 diffuse = CalculateDiffuse();
+	vec3 reflection = CalculateReflection();
+	float reflectionValue = texture(reflectivity, vTexCoord).x;
 
-	color = vec4((ambient + diffuse) * texture(albedo, vTexCoord).xyz, 1.0);		
+	color = vec4((ambient + diffuse) * mix(texture(albedo, vTexCoord).xyz, reflection, reflectionValue), 1.0);		
 }
 
 #endif
