@@ -55,15 +55,12 @@ vec3 CalculateAmbientLight()
 }
 
 
-vec3 CalculateDiffuse()
+vec3 CalculateDiffuse(vec4 pos, vec4 normal)
 {
 	vec3 col = vec3(0.0, 0.0, 0.0);
 
 	for(int i = 0; i < uLightCount; ++i)
 	{
-		vec4 pos = texture(worldPos, vTexCoord);
-		vec4 normal = texture(normals, vTexCoord);
-
 		vec3 viewDir = normalize(uCameraPosition - pos.xyz);
 		vec3 reflectDir;
 
@@ -96,11 +93,8 @@ vec3 CalculateDiffuse()
 }
 
 
-vec3 CalculateReflection()
+vec3 CalculateReflection(vec4 pos, vec4 normal)
 {
-	vec4 pos = texture(worldPos, vTexCoord);
-	vec4 normal = texture(normals, vTexCoord);
-
 	vec3 viewDir = normalize(uCameraPosition - pos.xyz);
 
 	return texture(skyBox, reflect(-viewDir, normal.xyz)).rgb;
@@ -110,12 +104,24 @@ vec3 CalculateReflection()
 void main()
 {
 
-	vec3 ambient = CalculateAmbientLight();
-	vec3 diffuse = CalculateDiffuse();
-	vec3 reflection = CalculateReflection();
+	vec4 pos = texture(worldPos, vTexCoord);
+	vec4 normal = texture(normals, vTexCoord);
 	float reflectionValue = texture(reflectivity, vTexCoord).x;
 
-	color = vec4((ambient + diffuse) * mix(texture(albedo, vTexCoord).xyz, reflection, reflectionValue), 1.0);		
+	if (pos.xyz == vec3(0.0) && normal.xyz == vec3(0.0))
+	{
+		color = vec4(texture(albedo, vTexCoord).xyz, 1.0);		
+	}
+
+	else
+	{
+		vec3 ambient = CalculateAmbientLight();
+		vec3 diffuse = CalculateDiffuse(pos, normal);
+		vec3 reflection = CalculateReflection(pos, normal);
+
+		color = vec4((ambient + diffuse) * mix(texture(albedo, vTexCoord).xyz, reflection, reflectionValue), 1.0);		
+	}
+	
 }
 
 #endif

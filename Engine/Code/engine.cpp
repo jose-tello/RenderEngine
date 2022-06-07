@@ -1483,7 +1483,7 @@ void BrightPixelPass(App* app)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	GLuint uniformLoc = glGetUniformLocation(program.handle, "threshold");
-	glUniform1f(uniformLoc, 0.9f);
+	glUniform1f(uniformLoc, 0.99f);
 
 	// - draw
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
