@@ -16,7 +16,7 @@ Environment::Environment(App* app, const char* cubeMapPath)
 	skyBoxProgram = app->programs[programIdx];
 
 	programIdx = CreateProgram(app, "hdrToCubemap.glsl", "HDR_TO_CUBEMAP");
-	Program program = app->programs[programIdx];
+	hdrToCubemapProgram = app->programs[programIdx];
 
 	//Generate cubeMap
 	glm::mat4 captureProjection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 10.f);
@@ -31,11 +31,11 @@ Environment::Environment(App* app, const char* cubeMapPath)
 	};
 
 
-	glUseProgram(program.handle);
-	u32 uniformLoc = glGetUniformLocation(program.handle, "hdrMap");
+	glUseProgram(hdrToCubemapProgram.handle);
+	u32 uniformLoc = glGetUniformLocation(hdrToCubemapProgram.handle, "hdrMap");
 	glUniform1i(uniformLoc, 0);
 
-	uniformLoc = glGetUniformLocation(program.handle, "uProjection");
+	uniformLoc = glGetUniformLocation(hdrToCubemapProgram.handle, "uProjection");
 	glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, glm::value_ptr(captureProjection));
 
 	glActiveTexture(GL_TEXTURE0);
@@ -47,7 +47,7 @@ Environment::Environment(App* app, const char* cubeMapPath)
 
 	for (int i = 0; i < 6; ++i)
 	{
-		uniformLoc = glGetUniformLocation(program.handle, "uView");
+		uniformLoc = glGetUniformLocation(hdrToCubemapProgram.handle, "uView");
 		glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, glm::value_ptr(captureViews[i]));
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, cubeMap.handle, 0);
@@ -55,8 +55,9 @@ Environment::Environment(App* app, const char* cubeMapPath)
 		RenderCube();
 	}
 
-	/*glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap.handle);
-	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);*/
+	InitIrradianceBuffers();
+	InitIrradianceTexture(app);
+	InitIrradianceMap();
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -92,7 +93,7 @@ void Environment::RenderSkybox(App* app)
 	glUniform1i(uniformLoc, 0);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap.handle);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap.handle);
 
 	uniformLoc = glGetUniformLocation(skyBoxProgram.handle, "uProjection");
 	glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, glm::value_ptr(app->camera.GetProjectionMatrix()));
@@ -149,6 +150,9 @@ void Environment::InitHdrTexture(const char* cubeMapPath)
 		img.stride = img.size.x * img.nchannels;
 	}
 
+	hdrTexSizeX = img.size.x;
+	hdrTexSizeY = img.size.y;
+
 	//Hdr
 	glGenTextures(1, &hdrTexture.handle);
 	glBindTexture(GL_TEXTURE_2D, hdrTexture.handle);
@@ -195,4 +199,81 @@ void Environment::InitCubemap()
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+
+void Environment::InitIrradianceBuffers()
+{
+	irradianceFBO.PushTexture(hdrTexSizeX, hdrTexSizeY, GL_RGBA16F, GL_RGBA, GL_FLOAT);
+	irradianceFBO.AttachTextures();
+}
+
+
+void Environment::InitIrradianceTexture(App* app)
+{
+	Blurr(app, irradianceFBO, hdrTexSizeX, hdrTexSizeY, 0, hdrTexture.handle, 0, 4.f, 0.f);
+	Blurr(app, irradianceFBO, hdrTexSizeX, hdrTexSizeY, 0, irradianceFBO.textures[0].handle, 0, 0.f, 4.f);
+}
+
+
+void Environment::InitIrradianceMap()
+{
+	//Cubemap
+	glGenTextures(1, &irradianceMap.handle);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap.handle);
+
+	for (u32 i = 0; i < 6; ++i)
+	{
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+	//Generate cubeMap
+	glm::mat4 captureProjection = glm::perspective(glm::radians(90.f), 1.f, 0.1f, 10.f);
+	glm::mat4 captureViews[] =
+	{
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  1.0f,  0.0f), glm::vec3(0.0f,  0.0f,  1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f,  0.0f), glm::vec3(0.0f,  0.0f, -1.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f,  1.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
+		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
+	};
+
+	glUseProgram(hdrToCubemapProgram.handle);
+	u32 uniformLoc = glGetUniformLocation(hdrToCubemapProgram.handle, "hdrMap");
+	glUniform1i(uniformLoc, 0);
+
+	uniformLoc = glGetUniformLocation(hdrToCubemapProgram.handle, "uProjection");
+	glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, glm::value_ptr(captureProjection));
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, irradianceFBO.textures[0].handle);
+
+	glViewport(0, 0, 128, 128);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
+
+	for (int i = 0; i < 6; ++i)
+	{
+		uniformLoc = glGetUniformLocation(hdrToCubemapProgram.handle, "uView");
+		glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, glm::value_ptr(captureViews[i]));
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap.handle, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		RenderCube();
+	}
+
+	/*glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap.handle);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);*/
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glUseProgram(0);
 }

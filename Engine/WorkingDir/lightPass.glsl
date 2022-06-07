@@ -23,6 +23,7 @@ uniform sampler2D normals;
 uniform sampler2D worldPos;
 uniform sampler2D reflectivity;
 uniform samplerCube skyBox;
+uniform samplerCube irradianceMap;
 
 float specularStrength = 0.5;
 
@@ -49,9 +50,11 @@ layout (binding = 0, std140) uniform GlobalParams
 };
 
 
-vec3 CalculateAmbientLight()
+vec3 CalculateAmbientLight(vec4 pos, vec4 normal)
 {
-	return uAmbientLightStrength * uAmbientLightCol;
+	vec3 viewDir = normalize(uCameraPosition - pos.xyz);
+
+	return texture(irradianceMap, reflect(-viewDir, normal.xyz)).rgb * uAmbientLightStrength;
 }
 
 
@@ -115,7 +118,7 @@ void main()
 
 	else
 	{
-		vec3 ambient = CalculateAmbientLight();
+		vec3 ambient = CalculateAmbientLight(pos, normal);
 		vec3 diffuse = CalculateDiffuse(pos, normal);
 		vec3 reflection = CalculateReflection(pos, normal);
 

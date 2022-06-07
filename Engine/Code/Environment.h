@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ModelStructures.h"
+#include "FrameBuffer.h"
+
 
 struct App;
 
@@ -20,15 +22,27 @@ private:
     void InitCubemapBuffers();
     void InitCubemap();
 
+    void InitIrradianceBuffers();
+    void InitIrradianceTexture(App* app);
+    void InitIrradianceMap();
+
 
 public:
 	Texture hdrTexture;
+
+    int hdrTexSizeX;
+    int hdrTexSizeY;
+
 	TextureCubeMap cubeMap;
+    TextureCubeMap irradianceMap;
 
     Program skyBoxProgram;
+    Program hdrToCubemapProgram;
 
     u32 cubeVAO = 0;
     u32 cubeVBO = 0;
+
+    FrameBuffer irradianceFBO;
 
 	u32 captureFBO;
 	u32 captureRBO;

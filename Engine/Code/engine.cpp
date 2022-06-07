@@ -1313,6 +1313,7 @@ void LightPass(App* app)
 	GLuint pos = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "worldPos");
 	GLuint reflx = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "reflectivity");
 	GLuint skyBox = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "skyBox");
+	GLuint irr = glGetUniformLocation(app->programs[app->lightProgramIdx].handle, "irradianceMap");
 
 	// - bind the texture into unit 0
 	glUniform1i(alb, 0);
@@ -1334,6 +1335,10 @@ void LightPass(App* app)
 	glUniform1i(skyBox, 4);
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, app->skybox->cubeMap.handle);
+
+	glUniform1i(irr, 5);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, app->skybox->irradianceMap.handle);
 
 
 
@@ -1457,7 +1462,6 @@ void RenderScene(App* app)
 
 void BrightPixelPass(App* app)
 {
-
 	app->fboBloom1.CheckStatus();
 	glBindFramebuffer(GL_FRAMEBUFFER, app->fboBloom1.handle);
 
