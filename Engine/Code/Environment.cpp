@@ -93,7 +93,7 @@ void Environment::RenderSkybox(App* app)
 	glUniform1i(uniformLoc, 0);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap.handle);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap.handle);
 
 	uniformLoc = glGetUniformLocation(skyBoxProgram.handle, "uProjection");
 	glUniformMatrix4fv(uniformLoc, 1, GL_FALSE, glm::value_ptr(app->camera.GetProjectionMatrix()));
