@@ -42,8 +42,8 @@ enum class DRAW_MODE : int
 
 enum Mode
 {
-    Mode_TexturedQuad,
-    Mode_Model,
+    Mode_Deferred,
+    Mode_Forward,
     Mode_Count
 };
 
@@ -59,6 +59,7 @@ struct OpenGLInfo
 struct App
 {
     OpenGLInfo info;
+    bool useForwardRendering = false;
     DRAW_MODE drawMode = DRAW_MODE::DEFAULT;
     bool debugDrawLights = true;
 
@@ -103,6 +104,8 @@ struct App
     u32 screenRectProgramIdx;
 
     u32 lightProgramIdx;
+
+    u32 forwardRenderProgramIdx;
     
     // texture indices
     u32 diceTexIdx;
@@ -230,6 +233,9 @@ void BrightPixelPass(App* app);
 void BlurrBloomPass(App* app);
 void Blurr(App* app, FrameBuffer& fbo, int texSizeX, int texSizeY, int attachment, u32 texture, int LOD, float directionX, float directionY);
 void ApplyBloomPass(App* app);
+
+//Forward render
+void ForwardRender(App* app);
 
 //Error callback
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* useParam);

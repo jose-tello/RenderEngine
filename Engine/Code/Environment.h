@@ -12,7 +12,7 @@ public:
 	Environment(App* app, const char* cubeMapPath);
 	~Environment();
 
-    void RenderSkybox(App* app);
+    void RenderSkybox(App* app, bool forwardRender = false);
 
 private:
 	void InitCubeVAO();

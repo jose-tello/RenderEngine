@@ -169,5 +169,8 @@
     <None Include="WorkingDir\Skybox.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="WorkingDir\ForwardRendering.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

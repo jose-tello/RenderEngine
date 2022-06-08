@@ -64,6 +64,7 @@
     <None Include="WorkingDir\BloomBlurrPass.glsl" />
     <None Include="WorkingDir\BloomPass.glsl" />
     <None Include="WorkingDir\BrightPixelDetection.glsl" />
+    <None Include="WorkingDir\ForwardRendering.glsl" />
     <None Include="WorkingDir\hdrToCubemap.glsl" />
     <None Include="WorkingDir\lightPass.glsl" />
     <None Include="WorkingDir\shaders.glsl" />

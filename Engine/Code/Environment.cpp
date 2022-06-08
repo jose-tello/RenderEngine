@@ -71,12 +71,21 @@ Environment::~Environment()
 }
 
 
-void Environment::RenderSkybox(App* app)
+void Environment::RenderSkybox(App* app, bool forwardRender)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
+	if (forwardRender == false)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, app->framebuffer.handle);
 
-	u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
-	glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+		u32 drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
+		glDrawBuffers(ARRAY_COUNT(drawBuffers), drawBuffers);
+	}
+
+	else
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);

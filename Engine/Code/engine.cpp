@@ -256,7 +256,7 @@ void Init(App* app)
 	
 	app->skybox = new Environment(app, "neon_photostudio_4k.hdr");
 
-	app->mode = Mode_Model;
+	app->mode = Mode_Deferred;
 }
 
 
@@ -334,6 +334,8 @@ void InitPrograms(App* app)
 	app->geometryUniformTexture = glGetUniformLocation(app->programs[app->texturedGeometryProgramIdx].handle, "uTexture");
 
 	app->lightProgramIdx = CreateProgram(app, "lightPass.glsl", "LIGHT_PASS");
+
+	app->forwardRenderProgramIdx = CreateProgram(app, "ForwardRendering.glsl", "FORWARD_RENDER");
 }
 
 
@@ -357,8 +359,17 @@ void InitScene(App* app)
 		app->entities[0].position = glm::vec3(0.0f, 1.9f, 0.6f);
 	}
 
-	//LoadModel(app, "Room/Room #1.obj", true);
-	app->sphereModel = LoadModel(app, "DefaultShapes/Sphere.fbx");
+	LoadModel(app, "Room/Room.obj", true);
+	app->sphereModel = LoadModel(app, "DefaultShapes/Sphere.fbx", true);
+
+	if (app->entities.size() != 0)
+	{
+		app->entities[2].position = glm::vec3(0.0f, 4.f, 0.0f);
+		u32 modelIdx = app->entities[2].modelIdx;
+		u32 materialIdx = app->models[modelIdx].materialIdx[0];
+		app->materials[materialIdx].reflectivity = 0.8;
+	}
+
 	app->planeModel = LoadPlane(app);
 
 	app->lights.push_back(Light(LIGHT_TYPE::POINT, glm::vec3(0.9, 0.7, 0.6), glm::vec3(0.0, -1.0, 0.0), glm::vec3(3.f, 4.f, 3.f)));
@@ -570,6 +581,18 @@ void Gui(App* app)
 
 void DrawModeGui(App* app)
 {
+	if (ImGui::BeginMenu("RenderMode"))
+	{
+		if (ImGui::MenuItem("Forward"))
+			app->mode = Mode_Forward;
+
+		if (ImGui::MenuItem("Deferred"))
+			app->mode = Mode_Deferred;
+
+		ImGui::EndMenu();
+	}
+
+
 	if (ImGui::BeginMenu("Draw mode"))
 	{
 		if (ImGui::MenuItem("Default"))
@@ -602,17 +625,6 @@ void DrawInfoGui(App* app)
 	if (ImGui::CollapsingHeader("Info", ImGuiTreeNodeFlags_None))
 	{
 		ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
-
-		if (ImGui::BeginMenu("RenderMode"))
-		{
-			if (ImGui::MenuItem("Textured quad"))
-				app->mode = Mode_TexturedQuad;
-
-			if (ImGui::MenuItem("Model"))
-				app->mode = Mode_Model;
-
-			ImGui::EndMenu();
-		}
 
 		ImGui::Separator();
 		ImGui::Text("OpenGl version: %s", app->info.version.c_str());
@@ -1075,7 +1087,7 @@ void Render(App* app)
 {
 	switch (app->mode)
 	{
-	case Mode_Model:
+	case Mode_Deferred:
 	{
 		RenderModels(app);
 
@@ -1090,6 +1102,13 @@ void Render(App* app)
 			BloomPass(app);
 
 		RenderScene(app);
+	}
+	break;
+
+	case Mode_Forward:
+	{
+		ForwardRender(app);
+		app->skybox->RenderSkybox(app, true);
 	}
 	break;
 
@@ -1623,6 +1642,68 @@ void ApplyBloomPass(App* app)
 	glBindVertexArray(0);
 	glUseProgram(0);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void ForwardRender(App* app)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glClearColor(0.f, 0.f, 0.f, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glEnable(GL_DEPTH_TEST);
+
+	// - set the viewport
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+	// - bind program
+	Program program = app->programs[app->forwardRenderProgramIdx];
+	glUseProgram(program.handle);
+
+	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->globalUniformBuffer.handle, app->globalParamsOffset, app->globalParamsSize);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, app->skybox->irradianceMap.handle);
+	GLuint uniformLocation = glGetUniformLocation(program.handle, "irradianceMap");
+	glUniform1i(uniformLocation, 1);
+
+	int entityCount = app->entities.size();
+	for (int i = 0; i < entityCount; ++i)
+	{
+		Model& model = app->models[app->entities[i].modelIdx];
+		Mesh& mesh = app->meshes[model.meshIdx];
+
+		int submeshCount = mesh.submeshes.size();
+
+		glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->localUniformBuffer.handle, app->entities[i].localParamsOffset, app->entities[i].localParamsSize);
+
+		for (int j = 0; j < submeshCount; ++j)
+		{
+			u32 vao = FindVAO(mesh, j, program);
+			glBindVertexArray(vao);
+
+			u32 materialIdx = model.materialIdx[j];
+			Material& material = app->materials[materialIdx];
+
+			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(2), app->materialUniformBuffer.handle, material.localParamsOffset, material.localParamsSize);
+
+			if (material.albedoTextureIdx != UINT32_MAX)
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, app->textures[material.albedoTextureIdx].handle);
+				uniformLocation = glGetUniformLocation(program.handle, "uTexture");
+				glUniform1i(uniformLocation, 0);
+			}
+
+			Submesh& submesh = mesh.submeshes[j];
+			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+		}
+	}
+
+	glBindVertexArray(0);
+	glUseProgram(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
