@@ -838,8 +838,6 @@ void DrawLightGui(App* app)
 		ImGui::NewLine();
 
 		ImGui::InputFloat("Ambient light strength", &app->ambientLightStrength);
-		ImGui::NewLine();
-		ImGui::ColorPicker3("Ambient light color", glm::value_ptr(app->ambientLightColor));
 
 		ImGui::NewLine();
 

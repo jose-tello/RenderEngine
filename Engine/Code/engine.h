@@ -96,7 +96,7 @@ struct App
     std::vector<Program>  programs;
 
     //Ambient light
-    float ambientLightStrength = 0.05;
+    float ambientLightStrength = 0.01;
     glm::vec3 ambientLightColor = {0.95, 0.8, 0.8};
 
     // program indices
